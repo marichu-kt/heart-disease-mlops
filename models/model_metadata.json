@@ -1,0 +1,24 @@
+{
+  "model_name": "heart_disease_mlp",
+  "version": "v2.0.0",
+  "algorithm": "StandardScaler + MLPClassifier",
+  "accuracy": 0.7407,
+  "created_at": "2026-05-07T22:43:29.430629+00:00",
+  "input_features": [
+    "age",
+    "sex",
+    "chest",
+    "resting_blood_pressure",
+    "serum_cholestoral",
+    "fasting_blood_sugar",
+    "resting_electrocardiographic_results",
+    "maximum_heart_rate_achieved",
+    "exercise_induced_angina",
+    "oldpeak",
+    "slope",
+    "number_of_major_vessels",
+    "thal"
+  ],
+  "model_path": "models/heart_model_v2_mlp.joblib",
+  "dataset_source": "OpenML heart-statlog"
+}
