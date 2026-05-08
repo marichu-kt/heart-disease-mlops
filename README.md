@@ -1,5 +1,13 @@
 # Heart Disease MLOps
 
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=061923)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)
+![CI](https://github.com/marichu-kt/heart-disease-mlops/actions/workflows/ci.yml/badge.svg)
+
 Aplicación MLOps completa para predecir riesgo de enfermedad cardíaca a partir de variables clínicas. El proyecto parte del taller base `Taller_PipelineModeling.zip` y lo transforma en una solución final con API, frontend, modelo versionado, monitorización, contenedores y documentación de presentación.
 
 > Uso académico. Este sistema no sustituye una valoración médica real.
@@ -19,6 +27,25 @@ Servicios principales:
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3001 |
 
+## Demo Rápida
+
+1. Levanta todos los servicios:
+
+```bash
+docker compose up --build
+```
+
+2. Abre el frontend en http://localhost:3000.
+3. Introduce los datos del paciente y lanza una predicción.
+4. Genera tráfico adicional para métricas:
+
+```bash
+python scripts/demo_requests.py --requests 25
+```
+
+5. Revisa Prometheus en http://localhost:9090.
+6. Revisa Grafana en http://localhost:3001.
+
 ## 2. Objetivo
 
 Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca en un proyecto final profesional de MLOps:
@@ -31,6 +58,7 @@ Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca e
 - Dashboard de Grafana provisionado.
 - Ejecución reproducible con Docker Compose.
 - Tests básicos con `pytest`.
+- Validación automática con GitHub Actions.
 
 ## 3. Problema Que Resuelve
 
@@ -64,6 +92,16 @@ No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-
 | Monitorización | Prometheus, Grafana |
 | Contenedores | Docker, Docker Compose |
 | Tests | pytest, FastAPI TestClient |
+| CI/CD | GitHub Actions |
+
+## Validación Automática Con GitHub Actions
+
+El repositorio incluye `.github/workflows/ci.yml`. El workflow se ejecuta en cada Pull Request y en cada push a `main`.
+
+Validaciones incluidas:
+
+- Backend: instala Python, instala `backend/requirements.txt` y ejecuta `pytest`.
+- Frontend: instala Node, ejecuta `npm ci` y `npm run build`.
 
 ## 6. Arquitectura General
 
@@ -131,11 +169,17 @@ heart-disease-mlops/
 │   ├── prometheus.yml
 │   ├── grafana-dashboard.json
 │   └── grafana/provisioning/
+├── scripts/
+│   └── demo_requests.py
 ├── tests/
 │   └── test_api.py
 ├── docs/
 │   ├── images/
+│   ├── model-card.md
 │   └── taller-base.md
+├── .github/
+│   └── workflows/ci.yml
+├── Makefile
 ├── docker-compose.yml
 ├── pytest.ini
 ├── .gitignore
@@ -224,6 +268,15 @@ Los modelos se guardan en `models/` con nombre versionado:
 
 La API carga el modelo indicado por `models/model_metadata.json`. Si se añade una versión futura, debe actualizarse el metadata para apuntar al nuevo archivo.
 
+## Comparativa De Modelos
+
+| Versión | Modelo | Archivo | Estado |
+|---|---|---|---|
+| v1 | Regresión logística original del taller | `models/heart_model_v1_logistic.joblib` | Conservado como referencia histórica. |
+| v2 | `StandardScaler + MLPClassifier` | `models/heart_model_v2_mlp.joblib` | Modelo actual usado por la API. |
+
+La documentación detallada del modelo está en [`docs/model-card.md`](docs/model-card.md).
+
 ## 14. API FastAPI
 
 La API carga el modelo al arrancar y expone predicciones individuales, batch, estado, información del modelo y métricas Prometheus.
@@ -296,6 +349,29 @@ Incluye:
 - Manejo visual de errores.
 - Diseño responsive.
 
+## Script De Demo Para Métricas
+
+El script `scripts/demo_requests.py` genera llamadas reales a `POST /predict` para poblar Prometheus y Grafana antes de una presentación.
+
+Uso básico:
+
+```bash
+python scripts/demo_requests.py
+```
+
+Uso con parámetros:
+
+```bash
+python scripts/demo_requests.py --api-url http://localhost:8000 --requests 25
+```
+
+El resumen por consola incluye:
+
+- número de peticiones realizadas;
+- predicciones `Disease` y `No Disease`;
+- errores agrupados, si los hay;
+- tiempo medio aproximado.
+
 ## 16. Prometheus
 
 Prometheus se configura en `monitoring/prometheus.yml` y recoge métricas desde:
@@ -330,8 +406,10 @@ Credenciales por defecto:
 
 ```text
 usuario: admin
-password: admin
+password: change-me-local-demo
 ```
+
+Estas credenciales son únicamente para demo local. Antes de publicar un despliegue real, define `GRAFANA_ADMIN_USER` y `GRAFANA_ADMIN_PASSWORD` en un `.env` local que no se suba al repositorio.
 
 El dashboard se provisiona automáticamente desde:
 
@@ -372,6 +450,19 @@ Para detener:
 docker compose down
 ```
 
+## Comandos Útiles
+
+El `Makefile` resume los comandos habituales del proyecto:
+
+| Comando | Acción |
+|---|---|
+| `make up` | Levanta la aplicación con `docker compose up --build`. |
+| `make down` | Detiene los servicios con `docker compose down`. |
+| `make test` | Ejecuta `python3 -m pytest`. |
+| `make train` | Reentrena el modelo con `python backend/train_model.py`. |
+| `make frontend-build` | Instala dependencias del frontend y ejecuta `npm run build`. |
+| `make demo` | Ejecuta `python scripts/demo_requests.py`. |
+
 ## 19. Cómo Entrenar El Modelo
 
 Con entorno local:
@@ -410,9 +501,11 @@ Los tests básicos están en `tests/test_api.py` y validan:
 - `POST /predict`
 - `GET /metrics`
 
+GitHub Actions ejecuta estos tests automáticamente en Pull Requests y pushes a `main`.
+
 ## 21. Capturas Del Proyecto
 
-La estructura está preparada en `docs/images/`. Si las imágenes no aparecen todavía, ejecútalo con Docker Compose y añade las capturas en estas rutas:
+La estructura está preparada en `docs/images/`. No se incluyen capturas falsas. Si las imágenes no aparecen todavía, ejecútalo con Docker Compose y añade capturas reales en estas rutas:
 
 | Captura | Ruta |
 |---|---|
@@ -447,6 +540,17 @@ La estructura está preparada en `docs/images/`. Si las imágenes no aparecen to
 | El frontend no llama a la API | Revisa `VITE_API_URL` y CORS en `CORS_ORIGINS`. |
 | Prometheus no ve la API | Comprueba que el servicio `api` esté healthy y que `/metrics` responda. |
 | Grafana no muestra datos | Genera tráfico con el frontend o con `curl /predict`. |
+
+## Preparación Antes De Publicar El Repo
+
+Antes de hacer público el repositorio, revisa:
+
+- que no exista un `.env` real versionado;
+- que no haya tokens, claves privadas, certificados ni credenciales reales;
+- que `node_modules/`, `.venv/`, `__pycache__/`, logs y archivos temporales no estén en Git;
+- que `.env.example` solo contenga valores de demo local;
+- que las credenciales de Grafana se configuren por variables de entorno si se despliega fuera de local;
+- que las capturas añadidas en `docs/images/` no muestren datos privados.
 
 ## 23. Mejoras Futuras
 

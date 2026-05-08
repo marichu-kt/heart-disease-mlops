@@ -163,8 +163,29 @@ h2 {
 }
 
 .statusPanel > div {
+  position: relative;
   padding: 20px;
   background: rgba(255, 255, 255, 0.64);
+}
+
+.statusPanel > div::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #94a3b8;
+}
+
+.statusPanel > .statusOk::before {
+  background: #10b981;
+}
+
+.statusPanel > .statusWarn::before {
+  background: #f59e0b;
+}
+
+.statusPanel > .statusNeutral::before {
+  background: #2563eb;
 }
 
 .panelLabel {
@@ -177,7 +198,16 @@ h2 {
 }
 
 .statusPanel strong {
+  display: block;
   font-size: 1.05rem;
+}
+
+.statusPanel small {
+  display: block;
+  margin-top: 8px;
+  color: #60717a;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .workspace {
@@ -207,7 +237,7 @@ h2 {
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px 16px;
 }
 
 .inputGroup {
@@ -233,9 +263,10 @@ h2 {
   display: flex;
   align-items: center;
   min-height: 46px;
-  border: 1px solid #d8e5e1;
+  border: 1px solid #d2e2dd;
   border-radius: 8px;
-  background: #fbfefd;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -315,21 +346,22 @@ h2 {
   color: #13202a;
   background: #f8fcfb;
   border: 1px solid #dbe9e4;
+  box-shadow: 0 18px 42px rgba(16, 44, 54, 0.12);
 }
 
 .riskHigh {
-  border-color: #f8b4a2;
-  background: #fff4ef;
+  border-color: #f2a793;
+  background: linear-gradient(180deg, #fff6f1 0%, #fff1eb 100%);
 }
 
 .riskMedium {
   border-color: #ffd780;
-  background: #fff9e8;
+  background: linear-gradient(180deg, #fffbeb 0%, #fff7dd 100%);
 }
 
 .riskLow {
   border-color: #a8e5c1;
-  background: #effcf4;
+  background: linear-gradient(180deg, #f0fdf4 0%, #e9f9f0 100%);
 }
 
 .resultTopline {
@@ -341,9 +373,16 @@ h2 {
   text-transform: uppercase;
 }
 
+.resultTopline span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #12342f;
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .resultCard > strong {
   display: block;
-  font-size: 3.2rem;
+  font-size: 2.95rem;
   line-height: 1;
 }
 
@@ -356,9 +395,16 @@ h2 {
 .probabilityWrap {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 14px;
+  gap: 10px 14px;
   align-items: center;
   margin: 10px 0 22px;
+}
+
+.probabilityLabel {
+  grid-column: 1 / -1;
+  color: #42565f;
+  font-size: 0.82rem;
+  font-weight: 850;
 }
 
 .probabilityTrack {
