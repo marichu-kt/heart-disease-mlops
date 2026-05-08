@@ -40,6 +40,7 @@ class PredictionResult:
     model_version: str
     inference_time_ms: float
     probabilities: Optional[Dict[str, float]]
+    decision_threshold: Optional[float]
 
 
 class ModelService:
@@ -56,6 +57,13 @@ class ModelService:
     @property
     def version(self) -> str:
         return str(self.metadata.get("version", "unknown"))
+
+    @property
+    def decision_threshold(self) -> Optional[float]:
+        raw_threshold = self.metadata.get("decision_threshold")
+        if raw_threshold is None:
+            return None
+        return float(raw_threshold)
 
     def load_latest_model(self) -> None:
         model_dir = self._model_dir()
@@ -100,6 +108,7 @@ class ModelService:
             "f1_score": self.metadata.get("f1_score"),
             "roc_auc": self.metadata.get("roc_auc"),
             "selected_metric": self.metadata.get("selected_metric"),
+            "decision_threshold": self.decision_threshold,
             "created_at": self.metadata.get("created_at"),
             "input_features": self.input_features,
             "model_path": str(self.model_path),
@@ -114,11 +123,12 @@ class ModelService:
         start = time.perf_counter()
         row = patient.model_dump()
         frame = self._to_frame([row])
-        prediction = int(self.model.predict(frame)[0])
+        model_prediction = int(self.model.predict(frame)[0])
         probabilities = self._predict_probabilities(frame)
+        disease_probability = self._disease_probability(probabilities, model_prediction)
+        prediction = self._prediction_with_threshold(disease_probability, model_prediction)
         inference_time_ms = round((time.perf_counter() - start) * 1000, 3)
 
-        disease_probability = self._disease_probability(probabilities, prediction)
         result = PredictionResult(
             prediction=prediction,
             label="Disease" if prediction == 1 else "No Disease",
@@ -127,6 +137,7 @@ class ModelService:
             model_version=self.version,
             inference_time_ms=inference_time_ms,
             probabilities=probabilities,
+            decision_threshold=self.decision_threshold,
         )
         logger.info(
             "Prediction completed: prediction=%s risk_level=%s model_version=%s inference_time_ms=%s",
@@ -166,6 +177,12 @@ class ModelService:
         if "disease" in probabilities:
             return float(probabilities["disease"])
         return float(probabilities.get(str(prediction), 0.0))
+
+    def _prediction_with_threshold(self, disease_probability: Optional[float], model_prediction: int) -> int:
+        threshold = self.decision_threshold
+        if disease_probability is None or threshold is None:
+            return model_prediction
+        return 1 if disease_probability >= threshold else 0
 
     def _risk_level(self, disease_probability: Optional[float], prediction: int) -> str:
         if disease_probability is None:

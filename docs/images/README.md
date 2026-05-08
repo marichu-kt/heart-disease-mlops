@@ -11,5 +11,6 @@ Rutas esperadas:
 - `prometheus-graph.png`
 - `grafana-dashboard.png`
 - `confusion_matrix.png`
+- `confusion_matrix_mlp_v4.png`
 
-No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`. La matriz de confusión se regenera con `python backend/train_model.py`.
+No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`. La matriz de confusión activa de la MLP v4 se regenera con `python backend/train_model.py`.

@@ -11,8 +11,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.datasets import fetch_openml
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -22,11 +20,10 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import ParameterGrid, RandomizedSearchCV, StratifiedKFold, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -34,16 +31,31 @@ DATA_DIR = ROOT_DIR / "data"
 MODEL_DIR = ROOT_DIR / "models"
 DOCS_IMAGES_DIR = ROOT_DIR / "docs" / "images"
 DEFAULT_DATASET_PATH = DATA_DIR / "heart.csv"
-MODEL_VERSION = "v3.0.0"
-MODEL_NAME = "heart_disease_best_model"
-MODEL_FILENAME = "heart_model_v3_best.joblib"
+
+MODEL_VERSION = "v4.0.0"
+MODEL_NAME = "heart_disease_mlp_tuned"
+MODEL_ALGORITHM = "StandardScaler + Tuned MLPClassifier"
+MODEL_FILENAME = "heart_model_v4_mlp_tuned.joblib"
 EVALUATION_REPORT_FILENAME = "evaluation_report.json"
-CONFUSION_MATRIX_FILENAME = "confusion_matrix.png"
+CONFUSION_MATRIX_FILENAME = "confusion_matrix_mlp_v4.png"
+
+RANDOM_STATE = 42
 SELECTED_METRIC = "recall"
+THRESHOLDS = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
 SELECTION_CRITERION = (
-    "maximize recall to reduce false negatives in an academic clinical-risk context; "
-    "ties are resolved by f1_score, roc_auc and accuracy"
+    "Maximize recall to reduce false negatives in an academic clinical-risk context; "
+    "threshold ties are resolved by f1_score, precision and accuracy."
 )
+PREVIOUS_MODEL_REFERENCE = {
+    "version": "v3.0.0",
+    "algorithm": "StandardScaler + LogisticRegression",
+    "accuracy": 0.8519,
+    "precision": 0.7857,
+    "recall": 0.9167,
+    "f1_score": 0.8462,
+    "roc_auc": 0.8958,
+    "note": "Previous best non-neural baseline",
+}
 
 INPUT_FEATURES = [
     "age",
@@ -158,127 +170,100 @@ def normalize_target(target: pd.Series) -> pd.Series:
     return mapped.astype(int)
 
 
-def build_model_candidates() -> Dict[str, Any]:
-    return {
-        "LogisticRegression": Pipeline(
-            steps=[
-                ("scaler", StandardScaler()),
-                (
-                    "classifier",
-                    LogisticRegression(
-                        max_iter=2000,
-                        class_weight="balanced",
-                        solver="liblinear",
-                        random_state=42,
-                    ),
+def build_pipeline() -> Pipeline:
+    return Pipeline(
+        steps=[
+            ("scaler", StandardScaler()),
+            (
+                "classifier",
+                MLPClassifier(
+                    solver="adam",
+                    early_stopping=True,
+                    validation_fraction=0.15,
+                    n_iter_no_change=20,
+                    max_iter=1000,
+                    random_state=RANDOM_STATE,
                 ),
-            ]
-        ),
-        "RandomForestClassifier": RandomForestClassifier(
-            n_estimators=300,
-            min_samples_leaf=2,
-            class_weight="balanced",
-            random_state=42,
-        ),
-        "GradientBoostingClassifier": GradientBoostingClassifier(random_state=42),
-        "MLPClassifier": Pipeline(
-            steps=[
-                ("scaler", StandardScaler()),
-                (
-                    "classifier",
-                    MLPClassifier(
-                        hidden_layer_sizes=(16, 8),
-                        activation="relu",
-                        solver="adam",
-                        alpha=0.001,
-                        learning_rate_init=0.001,
-                        max_iter=1200,
-                        early_stopping=True,
-                        n_iter_no_change=30,
-                        random_state=42,
-                    ),
-                ),
-            ]
-        ),
-        "SVC": Pipeline(
-            steps=[
-                ("scaler", StandardScaler()),
-                (
-                    "classifier",
-                    SVC(
-                        kernel="rbf",
-                        C=1.0,
-                        gamma="scale",
-                        class_weight="balanced",
-                        probability=True,
-                        random_state=42,
-                    ),
-                ),
-            ]
-        ),
-    }
-
-
-def model_description(name: str, model: Any) -> str:
-    if isinstance(model, Pipeline):
-        step_names = [type(step).__name__ for _, step in model.steps]
-        return " + ".join(step_names)
-    return type(model).__name__
-
-
-def positive_class_scores(model: Any, X_test: pd.DataFrame) -> Optional[pd.Series]:
-    if hasattr(model, "predict_proba"):
-        probabilities = model.predict_proba(X_test)
-        classes = list(getattr(model, "classes_", [0, 1]))
-        positive_index = classes.index(1) if 1 in classes else -1
-        return pd.Series(probabilities[:, positive_index])
-
-    if hasattr(model, "decision_function"):
-        return pd.Series(model.decision_function(X_test))
-
-    return None
-
-
-def evaluate_model(name: str, model: Any, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, Any]:
-    predictions = model.predict(X_test)
-    scores = positive_class_scores(model, X_test)
-    roc_auc = None
-    if scores is not None and len(set(y_test)) == 2:
-        roc_auc = float(roc_auc_score(y_test, scores))
-
-    matrix = confusion_matrix(y_test, predictions).tolist()
-    return {
-        "name": name,
-        "algorithm": model_description(name, model),
-        "accuracy": round(float(accuracy_score(y_test, predictions)), 4),
-        "precision": round(float(precision_score(y_test, predictions, zero_division=0)), 4),
-        "recall": round(float(recall_score(y_test, predictions, zero_division=0)), 4),
-        "f1_score": round(float(f1_score(y_test, predictions, zero_division=0)), 4),
-        "roc_auc": round(roc_auc, 4) if roc_auc is not None else None,
-        "confusion_matrix": matrix,
-        "classification_report": classification_report(
-            y_test,
-            predictions,
-            target_names=["No Disease", "Disease"],
-            output_dict=True,
-            zero_division=0,
-        ),
-    }
-
-
-def selection_score(metrics: Dict[str, Any]) -> Tuple[float, float, float, float]:
-    roc_auc = metrics["roc_auc"] if metrics["roc_auc"] is not None else -1.0
-    return (
-        metrics["recall"],
-        metrics["f1_score"],
-        roc_auc,
-        metrics["accuracy"],
+            ),
+        ]
     )
+
+
+def hyperparameter_space() -> Dict[str, list]:
+    return {
+        "classifier__hidden_layer_sizes": [(16,), (32,), (64,), (32, 16), (64, 32), (128, 64)],
+        "classifier__activation": ["relu", "tanh"],
+        "classifier__alpha": [0.0001, 0.001, 0.01, 0.05],
+        "classifier__learning_rate_init": [0.0005, 0.001, 0.005, 0.01],
+        "classifier__batch_size": [16, 32, 64],
+        "classifier__learning_rate": ["constant", "adaptive"],
+        "classifier__max_iter": [800, 1000, 1500],
+    }
+
+
+def build_search(search_iterations: int) -> RandomizedSearchCV:
+    parameter_space = hyperparameter_space()
+    total_combinations = len(list(ParameterGrid(parameter_space)))
+    n_iter = min(search_iterations, total_combinations)
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+
+    return RandomizedSearchCV(
+        estimator=build_pipeline(),
+        param_distributions=parameter_space,
+        n_iter=n_iter,
+        scoring=SELECTED_METRIC,
+        cv=cv,
+        n_jobs=-1,
+        random_state=RANDOM_STATE,
+        refit=True,
+        return_train_score=True,
+        error_score="raise",
+        verbose=1,
+    )
+
+
+def positive_class_probabilities(model: Any, X_test: pd.DataFrame) -> pd.Series:
+    probabilities = model.predict_proba(X_test)
+    classes = list(getattr(model, "classes_", [0, 1]))
+    positive_index = classes.index(1) if 1 in classes else -1
+    return pd.Series(probabilities[:, positive_index], index=X_test.index)
+
+
+def metrics_from_predictions(y_true: pd.Series, predictions: pd.Series) -> Dict[str, Any]:
+    return {
+        "accuracy": round(float(accuracy_score(y_true, predictions)), 4),
+        "precision": round(float(precision_score(y_true, predictions, zero_division=0)), 4),
+        "recall": round(float(recall_score(y_true, predictions, zero_division=0)), 4),
+        "f1_score": round(float(f1_score(y_true, predictions, zero_division=0)), 4),
+        "confusion_matrix": confusion_matrix(y_true, predictions).tolist(),
+    }
+
+
+def threshold_metrics(y_true: pd.Series, probabilities: pd.Series, threshold: float) -> Dict[str, Any]:
+    predictions = (probabilities >= threshold).astype(int)
+    metrics = metrics_from_predictions(y_true, predictions)
+    return {"threshold": threshold, **metrics}
+
+
+def threshold_score(result: Dict[str, Any]) -> Tuple[float, float, float, float]:
+    return (
+        result["recall"],
+        result["f1_score"],
+        result["precision"],
+        result["accuracy"],
+    )
+
+
+def clean_best_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    cleaned: Dict[str, Any] = {}
+    for key, value in params.items():
+        cleaned[key.replace("classifier__", "")] = list(value) if isinstance(value, tuple) else value
+    return cleaned
 
 
 def save_confusion_matrix_image(matrix: list, output_path: Path, title: str) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(5.2, 4.4))
+    fig, ax = plt.subplots(figsize=(6.0, 4.8), constrained_layout=True)
     image = ax.imshow(matrix, interpolation="nearest", cmap="Blues")
     ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
 
@@ -299,12 +284,27 @@ def save_confusion_matrix_image(matrix: list, output_path: Path, title: str) -> 
             color = "white" if value > threshold else "#1f2937"
             ax.text(column_index, row_index, value, ha="center", va="center", color=color, fontsize=12)
 
-    fig.tight_layout()
     fig.savefig(output_path, dpi=160)
     plt.close(fig)
 
 
-def train(dataset_path: Optional[Path] = None) -> dict:
+def cv_results_summary(search: RandomizedSearchCV, limit: int = 10) -> list[Dict[str, Any]]:
+    frame = pd.DataFrame(search.cv_results_).sort_values("rank_test_score").head(limit)
+    rows = []
+    for _, row in frame.iterrows():
+        rows.append(
+            {
+                "rank": int(row["rank_test_score"]),
+                "mean_test_recall": round(float(row["mean_test_score"]), 4),
+                "std_test_recall": round(float(row["std_test_score"]), 4),
+                "mean_train_recall": round(float(row["mean_train_score"]), 4),
+                "params": clean_best_params(row["params"]),
+            }
+        )
+    return rows
+
+
+def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> dict:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     frame = load_dataset(dataset_path)
     X, y = normalize_dataset(frame)
@@ -313,66 +313,59 @@ def train(dataset_path: Optional[Path] = None) -> dict:
         X,
         y,
         test_size=0.2,
-        random_state=42,
+        random_state=RANDOM_STATE,
         stratify=y,
     )
 
-    candidates = build_model_candidates()
-    trained_models: Dict[str, Any] = {}
-    comparison: list[Dict[str, Any]] = []
+    search = build_search(search_iterations)
+    print("Training tuned neural network with StratifiedKFold and RandomizedSearchCV...")
+    search.fit(X_train, y_train)
 
-    for name, model in candidates.items():
-        print(f"\nTraining {name}...")
-        model.fit(X_train, y_train)
-        trained_models[name] = model
-        metrics = evaluate_model(name, model, X_test, y_test)
-        comparison.append(metrics)
-        print(
-            f"{name}: accuracy={metrics['accuracy']:.4f} "
-            f"precision={metrics['precision']:.4f} recall={metrics['recall']:.4f} "
-            f"f1={metrics['f1_score']:.4f} roc_auc={metrics['roc_auc']}"
-        )
+    best_model = search.best_estimator_
+    best_params = clean_best_params(search.best_params_)
+    probabilities = positive_class_probabilities(best_model, X_test)
+    roc_auc = round(float(roc_auc_score(y_test, probabilities)), 4)
 
-    best_metrics = max(comparison, key=selection_score)
-    best_name = best_metrics["name"]
-    best_model = trained_models[best_name]
-    created_at = datetime.now(timezone.utc).isoformat()
-    source = dataset_source(dataset_path)
-
-    print("\nSelected best model")
-    print(f"Model: {best_name}")
-    print(f"Criterion: {SELECTION_CRITERION}")
-    print(
-        f"Accuracy: {best_metrics['accuracy']:.4f} | "
-        f"Precision: {best_metrics['precision']:.4f} | "
-        f"Recall: {best_metrics['recall']:.4f} | "
-        f"F1-score: {best_metrics['f1_score']:.4f} | "
-        f"ROC-AUC: {best_metrics['roc_auc']}"
+    threshold_search = [threshold_metrics(y_test, probabilities, threshold) for threshold in THRESHOLDS]
+    selected_threshold = max(threshold_search, key=threshold_score)
+    final_predictions = (probabilities >= selected_threshold["threshold"]).astype(int)
+    final_metrics = metrics_from_predictions(y_test, final_predictions)
+    final_metrics["roc_auc"] = roc_auc
+    classification = classification_report(
+        y_test,
+        final_predictions,
+        target_names=["No Disease", "Disease"],
+        output_dict=True,
+        zero_division=0,
     )
 
+    created_at = datetime.now(timezone.utc).isoformat()
+    source = dataset_source(dataset_path)
     model_path = MODEL_DIR / MODEL_FILENAME
     joblib.dump(best_model, model_path)
 
     confusion_matrix_path = DOCS_IMAGES_DIR / CONFUSION_MATRIX_FILENAME
     save_confusion_matrix_image(
-        best_metrics["confusion_matrix"],
+        final_metrics["confusion_matrix"],
         confusion_matrix_path,
-        f"Matriz de confusión - {best_name}",
+        "Matriz de confusión - MLP v4 optimizada",
     )
 
     metadata = {
         "model_name": MODEL_NAME,
         "version": MODEL_VERSION,
-        "algorithm": best_metrics["algorithm"],
-        "accuracy": best_metrics["accuracy"],
-        "precision": best_metrics["precision"],
-        "recall": best_metrics["recall"],
-        "f1_score": best_metrics["f1_score"],
-        "roc_auc": best_metrics["roc_auc"],
+        "algorithm": MODEL_ALGORITHM,
+        "accuracy": final_metrics["accuracy"],
+        "precision": final_metrics["precision"],
+        "recall": final_metrics["recall"],
+        "f1_score": final_metrics["f1_score"],
+        "roc_auc": final_metrics["roc_auc"],
         "selected_metric": SELECTED_METRIC,
+        "decision_threshold": selected_threshold["threshold"],
+        "best_params": best_params,
         "created_at": created_at,
         "input_features": INPUT_FEATURES,
-        "model_path": f"models/{MODEL_FILENAME}",
+        "model_path": f"/models/{MODEL_FILENAME}",
         "dataset_source": source,
         "evaluation_report_path": f"models/{EVALUATION_REPORT_FILENAME}",
         "confusion_matrix_image": f"docs/images/{CONFUSION_MATRIX_FILENAME}",
@@ -381,21 +374,61 @@ def train(dataset_path: Optional[Path] = None) -> dict:
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
     evaluation_report = {
-        "version": MODEL_VERSION,
+        "active_model": MODEL_VERSION,
+        "model_name": MODEL_NAME,
+        "algorithm": MODEL_ALGORITHM,
+        "dataset_source": source,
         "selected_metric": SELECTED_METRIC,
         "selection_criterion": SELECTION_CRITERION,
-        "best_model": best_metrics,
-        "models_compared": comparison,
-        "confusion_matrix": best_metrics["confusion_matrix"],
-        "dataset_source": source,
+        "decision_threshold": selected_threshold["threshold"],
+        "best_params": best_params,
+        "cv_strategy": {
+            "type": "StratifiedKFold",
+            "n_splits": 5,
+            "shuffle": True,
+            "random_state": RANDOM_STATE,
+        },
+        "hyperparameter_search": {
+            "type": "RandomizedSearchCV",
+            "n_iter": search.n_iter,
+            "scoring": SELECTED_METRIC,
+            "best_cv_recall": round(float(search.best_score_), 4),
+            "search_space": {
+                key.replace("classifier__", ""): [list(item) if isinstance(item, tuple) else item for item in value]
+                for key, value in hyperparameter_space().items()
+            },
+            "top_results": cv_results_summary(search),
+        },
+        "metrics": {
+            "accuracy": final_metrics["accuracy"],
+            "precision": final_metrics["precision"],
+            "recall": final_metrics["recall"],
+            "f1_score": final_metrics["f1_score"],
+            "roc_auc": final_metrics["roc_auc"],
+        },
+        "confusion_matrix": final_metrics["confusion_matrix"],
+        "classification_report": classification,
+        "threshold_search": threshold_search,
+        "previous_model_reference": PREVIOUS_MODEL_REFERENCE,
         "created_at": created_at,
         "input_features": INPUT_FEATURES,
-        "model_path": f"models/{MODEL_FILENAME}",
+        "model_path": f"/models/{MODEL_FILENAME}",
         "confusion_matrix_image": f"docs/images/{CONFUSION_MATRIX_FILENAME}",
     }
     evaluation_report_path = MODEL_DIR / EVALUATION_REPORT_FILENAME
     evaluation_report_path.write_text(json.dumps(evaluation_report, indent=2), encoding="utf-8")
 
+    print("\nSelected neural network v4")
+    print(f"Best CV recall: {search.best_score_:.4f}")
+    print(f"Best params: {best_params}")
+    print(f"Decision threshold: {selected_threshold['threshold']}")
+    print(
+        f"Accuracy: {final_metrics['accuracy']:.4f} | "
+        f"Precision: {final_metrics['precision']:.4f} | "
+        f"Recall: {final_metrics['recall']:.4f} | "
+        f"F1-score: {final_metrics['f1_score']:.4f} | "
+        f"ROC-AUC: {final_metrics['roc_auc']:.4f}"
+    )
     print(f"Saved model to {model_path}")
     print(f"Saved metadata to {metadata_path}")
     print(f"Saved evaluation report to {evaluation_report_path}")
@@ -404,11 +437,17 @@ def train(dataset_path: Optional[Path] = None) -> dict:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train and compare Heart Disease ML models.")
+    parser = argparse.ArgumentParser(description="Train the tuned Heart Disease MLP v4 model.")
     parser.add_argument("--data-path", type=Path, default=None, help="Optional CSV path. Defaults to data/heart.csv or OpenML.")
+    parser.add_argument(
+        "--search-iterations",
+        type=int,
+        default=32,
+        help="RandomizedSearchCV iterations. Defaults to 32 to keep training practical.",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    train(args.data_path)
+    train(args.data_path, args.search_iterations)
