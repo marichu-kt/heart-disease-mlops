@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/logo-full.png" alt="Heart Disease MLOps" width="520">
+</p>
+
 # Heart Disease MLOps
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
@@ -173,6 +177,9 @@ heart-disease-mlops/
 ├── data/
 │   └── README.md
 ├── frontend/
+│   ├── public/assets/
+│   │   ├── logo-icon.png
+│   │   └── logo-full.png
 │   ├── src/
 │   │   ├── App.jsx
 │   │   ├── main.jsx
@@ -731,6 +738,8 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 
 | Captura | Ruta |
 |---|---|
+| Logo icono | `docs/images/logo-icon.png` |
+| Logo completo | `docs/images/logo-full.png` |
 | Frontend modo claro | `docs/images/frontend-light.png` |
 | Frontend modo oscuro | `docs/images/frontend-dark.png` |
 | Swagger | `docs/images/swagger.png` |

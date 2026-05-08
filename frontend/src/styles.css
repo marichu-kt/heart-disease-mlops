@@ -140,16 +140,25 @@ select:focus-visible {
 }
 
 .brandMark {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  color: #ffffff;
-  background: var(--accent);
-  border-radius: 4px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  padding: 3px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.brandMark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .brandBlock p,

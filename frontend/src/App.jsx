@@ -357,8 +357,8 @@ function App() {
     <main className="appShell">
       <header className="masthead">
         <div className="brandBlock">
-          <div className="brandMark" aria-hidden="true">
-            HD
+          <div className="brandMark">
+            <img src="/assets/logo-icon.png" alt="Heart Disease MLOps logo" />
           </div>
           <div>
             <p>Heart Disease MLOps</p>
