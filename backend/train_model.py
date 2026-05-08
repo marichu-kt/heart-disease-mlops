@@ -7,7 +7,14 @@ from typing import Optional, Tuple
 import joblib
 import pandas as pd
 from sklearn.datasets import fetch_openml
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -21,6 +28,7 @@ DEFAULT_DATASET_PATH = DATA_DIR / "heart.csv"
 MODEL_VERSION = "v2.0.0"
 MODEL_NAME = "heart_disease_mlp"
 MODEL_FILENAME = "heart_model_v2_mlp.joblib"
+EVALUATION_REPORT_FILENAME = "evaluation_report.json"
 
 INPUT_FEATURES = [
     "age",
@@ -83,6 +91,14 @@ def load_dataset(dataset_path: Optional[Path]) -> pd.DataFrame:
     if "class" not in frame.columns and data.target is not None:
         frame["class"] = data.target
     return frame
+
+
+def dataset_source(dataset_path: Optional[Path]) -> str:
+    if dataset_path and dataset_path.exists():
+        return str(dataset_path)
+    if DEFAULT_DATASET_PATH.exists():
+        return str(DEFAULT_DATASET_PATH)
+    return "OpenML heart-statlog"
 
 
 def normalize_dataset(frame: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Series]:
@@ -167,8 +183,18 @@ def train(dataset_path: Optional[Path] = None) -> dict:
 
     predictions = pipeline.predict(X_test)
     accuracy = float(accuracy_score(y_test, predictions))
+    precision = float(precision_score(y_test, predictions, zero_division=0))
+    recall = float(recall_score(y_test, predictions, zero_division=0))
+    f1 = float(f1_score(y_test, predictions, zero_division=0))
+    matrix = confusion_matrix(y_test, predictions).tolist()
+    created_at = datetime.now(timezone.utc).isoformat()
+    source = dataset_source(dataset_path)
+
     print(classification_report(y_test, predictions, target_names=["No Disease", "Disease"]))
     print(f"Accuracy: {accuracy:.4f}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1-score: {f1:.4f}")
 
     model_path = MODEL_DIR / MODEL_FILENAME
     joblib.dump(pipeline, model_path)
@@ -178,15 +204,35 @@ def train(dataset_path: Optional[Path] = None) -> dict:
         "version": MODEL_VERSION,
         "algorithm": "StandardScaler + MLPClassifier",
         "accuracy": round(accuracy, 4),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1_score": round(f1, 4),
+        "created_at": created_at,
         "input_features": INPUT_FEATURES,
         "model_path": f"models/{MODEL_FILENAME}",
-        "dataset_source": str(dataset_path or DEFAULT_DATASET_PATH if (dataset_path or DEFAULT_DATASET_PATH).exists() else "OpenML heart-statlog"),
+        "dataset_source": source,
+        "evaluation_report_path": f"models/{EVALUATION_REPORT_FILENAME}",
     }
     metadata_path = MODEL_DIR / "model_metadata.json"
     metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+
+    evaluation_report = {
+        "version": MODEL_VERSION,
+        "algorithm": "StandardScaler + MLPClassifier",
+        "accuracy": round(accuracy, 4),
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1_score": round(f1, 4),
+        "confusion_matrix": matrix,
+        "dataset_source": source,
+        "created_at": created_at,
+    }
+    evaluation_report_path = MODEL_DIR / EVALUATION_REPORT_FILENAME
+    evaluation_report_path.write_text(json.dumps(evaluation_report, indent=2), encoding="utf-8")
+
     print(f"Saved model to {model_path}")
     print(f"Saved metadata to {metadata_path}")
+    print(f"Saved evaluation report to {evaluation_report_path}")
     return metadata
 
 

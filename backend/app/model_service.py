@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass
@@ -10,6 +11,8 @@ import pandas as pd
 
 from .schemas import PatientData
 
+
+logger = logging.getLogger(__name__)
 
 INPUT_FEATURES = [
     "age",
@@ -57,6 +60,7 @@ class ModelService:
     def load_latest_model(self) -> None:
         model_dir = self._model_dir()
         metadata_path = model_dir / "model_metadata.json"
+        logger.info("Loading model metadata from %s", metadata_path)
 
         if metadata_path.exists():
             self.metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -76,6 +80,12 @@ class ModelService:
         self.model_path = model_path
         self.model = joblib.load(model_path)
         self.loaded = True
+        logger.info(
+            "Model loaded successfully: model_name=%s model_version=%s model_path=%s",
+            self.metadata.get("model_name"),
+            self.version,
+            self.model_path,
+        )
 
     def model_info(self) -> Dict[str, Any]:
         if not self.loaded:
@@ -102,7 +112,7 @@ class ModelService:
         inference_time_ms = round((time.perf_counter() - start) * 1000, 3)
 
         disease_probability = self._disease_probability(probabilities, prediction)
-        return PredictionResult(
+        result = PredictionResult(
             prediction=prediction,
             label="Disease" if prediction == 1 else "No Disease",
             probability=round(disease_probability, 4) if disease_probability is not None else None,
@@ -111,6 +121,14 @@ class ModelService:
             inference_time_ms=inference_time_ms,
             probabilities=probabilities,
         )
+        logger.info(
+            "Prediction completed: prediction=%s risk_level=%s model_version=%s inference_time_ms=%s",
+            result.prediction,
+            result.risk_level,
+            result.model_version,
+            result.inference_time_ms,
+        )
+        return result
 
     def predict_batch(self, patients: List[PatientData]) -> List[PredictionResult]:
         return [self.predict(patient) for patient in patients]

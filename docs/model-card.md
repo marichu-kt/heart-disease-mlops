@@ -53,13 +53,29 @@ Predicción binaria de presencia de enfermedad cardíaca:
 - `0`: No Disease
 - `1`: Disease
 
-## Métrica Principal
+## Métricas De Evaluación
 
-La métrica principal registrada en `models/model_metadata.json` es `accuracy`. La versión actual registra aproximadamente:
+Las métricas principales se registran en `models/model_metadata.json` y en `models/evaluation_report.json`.
 
-```text
-accuracy = 0.7407
+La versión actual registra:
+
+| Métrica | Valor |
+|---|---:|
+| Accuracy | 0.7407 |
+| Precision | 0.7083 |
+| Recall | 0.7083 |
+| F1-score | 0.7083 |
+
+El reporte de evaluación también incluye la matriz de confusión:
+
+```json
+[
+  [23, 7],
+  [7, 17]
+]
 ```
+
+Esta evaluación procede del split de test utilizado por `backend/train_model.py` sobre la fuente `OpenML heart-statlog`.
 
 ## Uso Previsto
 
@@ -78,6 +94,7 @@ Este modelo está diseñado para una demostración académica de MLOps:
 - El dataset usado es pequeño para estándares clínicos actuales.
 - No se ha realizado validación clínica externa.
 - La métrica `accuracy` no refleja por sí sola todos los riesgos de falsos positivos o falsos negativos.
+- `precision`, `recall` y `f1_score` ayudan a revisar el comportamiento del clasificador, pero no sustituyen una validación clínica.
 - La probabilidad devuelta por el modelo debe interpretarse como salida del clasificador, no como probabilidad clínica certificada.
 
 ## Advertencia De Uso Académico
@@ -102,14 +119,16 @@ El entrenamiento genera:
 
 - `models/heart_model_v2_mlp.joblib`
 - `models/model_metadata.json`
+- `models/evaluation_report.json`
 
 ## Cómo Versionar Una Nueva Versión
 
 1. Entrenar el nuevo modelo.
 2. Guardarlo con un nombre versionado, por ejemplo `models/heart_model_v3_mlp.joblib`.
-3. Actualizar `models/model_metadata.json` con la nueva versión, accuracy, fecha y `model_path`.
-4. Ejecutar tests y una demo local.
-5. Documentar el cambio en README y en esta Model Card.
+3. Generar `models/evaluation_report.json` con accuracy, precision, recall, F1, matriz de confusión, fuente del dataset y fecha.
+4. Actualizar `models/model_metadata.json` con la nueva versión, métricas, fecha, `model_path` y `evaluation_report_path`.
+5. Ejecutar tests y una demo local.
+6. Documentar el cambio en README y en esta Model Card.
 
 ## Riesgos O Sesgos Posibles
 
