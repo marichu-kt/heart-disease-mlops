@@ -67,6 +67,15 @@ class HealthResponse(BaseModel):
     timestamp: str
 
 
+class VersionResponse(BaseModel):
+    app_name: str
+    app_version: str
+    model_version: str
+    model_name: str
+    environment: str
+    timestamp: str
+
+
 class ModelInfoResponse(BaseModel):
     model_name: str
     version: str

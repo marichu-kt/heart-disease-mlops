@@ -3,6 +3,9 @@
   "version": "v2.0.0",
   "algorithm": "StandardScaler + MLPClassifier",
   "accuracy": 0.7407,
+  "precision": 0.7083,
+  "recall": 0.7083,
+  "f1_score": 0.7083,
   "created_at": "2026-05-07T22:43:29.430629+00:00",
   "input_features": [
     "age",
@@ -20,5 +23,6 @@
     "thal"
   ],
   "model_path": "models/heart_model_v2_mlp.joblib",
-  "dataset_source": "OpenML heart-statlog"
+  "dataset_source": "OpenML heart-statlog",
+  "evaluation_report_path": "models/evaluation_report.json"
 }

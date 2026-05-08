@@ -87,7 +87,7 @@ No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-
 |---|---|
 | API | FastAPI, Pydantic, Uvicorn |
 | ML | scikit-learn, `StandardScaler`, `MLPClassifier`, joblib |
-| Frontend | React, Vite, lucide-react, CSS responsive |
+| Frontend | React, Vite, CSS responsive |
 | Métricas | prometheus-client |
 | Monitorización | Prometheus, Grafana |
 | Contenedores | Docker, Docker Compose |
@@ -102,6 +102,21 @@ Validaciones incluidas:
 
 - Backend: instala Python, instala `backend/requirements.txt` y ejecuta `pytest`.
 - Frontend: instala Node, ejecuta `npm ci` y `npm run build`.
+
+## Calidad Técnica
+
+El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y mantenible:
+
+| Área | Implementación |
+|---|---|
+| CI | GitHub Actions valida backend y frontend automáticamente. |
+| Tests | `pytest` cubre salud, información, versión, predicción y métricas. |
+| Docker Compose | Levanta API, frontend, Prometheus y Grafana con un solo comando. |
+| Versionado de modelo | Los artefactos se conservan en `models/` y se cargan desde metadata. |
+| Métricas | `/metrics` expone requests, errores, latencia e inferencias. |
+| Model Card | `docs/model-card.md` documenta uso previsto, límites y riesgos. |
+| Evaluación | `models/evaluation_report.json` registra accuracy, precision, recall, F1 y matriz de confusión. |
+| Logging | La API registra carga de modelo, versión, peticiones, inferencias y errores de forma clara. |
 
 ## 6. Arquitectura General
 
@@ -164,6 +179,7 @@ heart-disease-mlops/
 ├── models/
 │   ├── heart_model_v1_logistic.joblib
 │   ├── heart_model_v2_mlp.joblib
+│   ├── evaluation_report.json
 │   └── model_metadata.json
 ├── monitoring/
 │   ├── prometheus.yml
@@ -234,6 +250,12 @@ Metadata generada:
 models/model_metadata.json
 ```
 
+Reporte de evaluación:
+
+```text
+models/evaluation_report.json
+```
+
 Ejemplo de metadata:
 
 ```json
@@ -242,10 +264,27 @@ Ejemplo de metadata:
   "version": "v2.0.0",
   "algorithm": "StandardScaler + MLPClassifier",
   "accuracy": 0.7407,
+  "precision": 0.7083,
+  "recall": 0.7083,
+  "f1_score": 0.7083,
   "input_features": ["age", "sex", "..."],
-  "model_path": "models/heart_model_v2_mlp.joblib"
+  "model_path": "models/heart_model_v2_mlp.joblib",
+  "evaluation_report_path": "models/evaluation_report.json"
 }
 ```
+
+## Reporte De Evaluación
+
+`models/evaluation_report.json` resume la evaluación del modelo actual sobre el split de test usado en entrenamiento:
+
+| Métrica | Valor actual |
+|---|---:|
+| Accuracy | 0.7407 |
+| Precision | 0.7083 |
+| Recall | 0.7083 |
+| F1-score | 0.7083 |
+
+También incluye la matriz de confusión, la versión del modelo, el algoritmo, la fuente del dataset y la fecha de generación. Este archivo ayuda a defender el proyecto como flujo MLOps evaluable, no solo como API de inferencia.
 
 ## 12. Por Qué Se Usa MLPClassifier
 
@@ -287,10 +326,24 @@ La API carga el modelo al arrancar y expone predicciones individuales, batch, es
 |---|---|---|
 | GET | `/health` | Estado de la API y carga del modelo. |
 | GET | `/info` | Información del modelo cargado. |
+| GET | `/version` | Versión de la aplicación, modelo activo, entorno y timestamp. |
 | POST | `/predict` | Predicción individual. |
 | POST | `/predict/batch` | Predicción para varios pacientes. |
 | GET | `/metrics` | Métricas en formato Prometheus. |
 | GET | `/docs` | Swagger UI de FastAPI. |
+
+Ejemplo de respuesta de `/version`:
+
+```json
+{
+  "app_name": "Heart Disease MLOps API",
+  "app_version": "1.0.0",
+  "model_version": "v2.0.0",
+  "model_name": "heart_disease_mlp",
+  "environment": "local",
+  "timestamp": "2026-05-08T10:18:13.703385+00:00"
+}
+```
 
 ### Ejemplo De Petición A `/predict`
 
@@ -341,13 +394,29 @@ VITE_API_URL=http://localhost:8000
 
 Incluye:
 
-- Pantalla principal estilo dashboard médico.
-- Estado de API y modelo.
-- Formulario con las 13 variables clínicas.
+- Interfaz tipo dashboard clínico/técnico, sobria y orientada a producto.
+- Cabecera compacta con estado de API, modelo activo y algoritmo.
+- Panel lateral con estado del servicio, metadata del modelo y accesos técnicos.
+- Formulario con las 13 variables clínicas agrupadas por secciones.
+- Selects para variables categóricas como sexo, dolor torácico, glucosa, angina, pendiente ST y thal.
 - Validación básica por rango.
-- Tarjeta de resultado con etiqueta, nivel de riesgo, probabilidad, versión del modelo y tiempo de inferencia.
+- Panel de resultado con etiqueta, nivel de riesgo, probabilidades, versión del modelo, tiempo de inferencia y fecha local.
+- Visualización de probabilidades `Disease` / `No Disease`.
+- Indicador de riesgo bajo, medio o alto.
+- Resumen visual de los valores de entrada principales.
 - Manejo visual de errores.
 - Diseño responsive.
+
+## Diseño De Interfaz
+
+El rediseño evita la estética de landing page genérica. La pantalla se plantea como una herramienta interna de análisis de riesgo:
+
+- fondo claro y neutro;
+- paneles con bordes discretos y sombras mínimas;
+- jerarquía visual compacta;
+- textos funcionales, sin claims comerciales;
+- agrupación clínica de campos;
+- visualizaciones útiles basadas en la respuesta real de la API y en los valores introducidos por el usuario.
 
 ## Script De Demo Para Métricas
 
@@ -485,6 +554,7 @@ Salida esperada:
 ```text
 models/heart_model_v2_mlp.joblib
 models/model_metadata.json
+models/evaluation_report.json
 ```
 
 ## 20. Cómo Ejecutar Los Tests
@@ -498,6 +568,7 @@ Los tests básicos están en `tests/test_api.py` y validan:
 
 - `GET /health`
 - `GET /info`
+- `GET /version`
 - `POST /predict`
 - `GET /metrics`
 
@@ -556,7 +627,7 @@ Antes de hacer público el repositorio, revisa:
 
 - Añadir validación clínica más detallada por variable.
 - Registrar experimentos con MLflow.
-- Añadir CI/CD con GitHub Actions.
+- Ampliar CI/CD con publicación de imágenes Docker y release automática.
 - Persistir métricas y logs con almacenamiento externo.
 - Añadir autenticación para el frontend y la API.
 - Comparar varias familias de modelos antes de publicar una versión.
