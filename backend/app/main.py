@@ -190,7 +190,7 @@ async def version() -> VersionResponse:
     response_model=ModelInfoResponse,
     tags=["Model"],
     summary="Información del modelo activo",
-    description="Devuelve nombre, versión, algoritmo, exactitud, features de entrada y ruta del artefacto cargado.",
+    description="Devuelve nombre, versión, algoritmo, métricas de evaluación, features de entrada y ruta del artefacto cargado.",
 )
 async def info() -> ModelInfoResponse:
     try:

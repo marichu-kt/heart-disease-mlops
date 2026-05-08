@@ -1,12 +1,14 @@
 {
-  "model_name": "heart_disease_mlp",
-  "version": "v2.0.0",
-  "algorithm": "StandardScaler + MLPClassifier",
-  "accuracy": 0.7407,
-  "precision": 0.7083,
-  "recall": 0.7083,
-  "f1_score": 0.7083,
-  "created_at": "2026-05-07T22:43:29.430629+00:00",
+  "model_name": "heart_disease_best_model",
+  "version": "v3.0.0",
+  "algorithm": "StandardScaler + LogisticRegression",
+  "accuracy": 0.8519,
+  "precision": 0.7857,
+  "recall": 0.9167,
+  "f1_score": 0.8462,
+  "roc_auc": 0.8958,
+  "selected_metric": "recall",
+  "created_at": "2026-05-08T16:44:41.317013+00:00",
   "input_features": [
     "age",
     "sex",
@@ -22,7 +24,8 @@
     "number_of_major_vessels",
     "thal"
   ],
-  "model_path": "models/heart_model_v2_mlp.joblib",
+  "model_path": "models/heart_model_v3_best.joblib",
   "dataset_source": "OpenML heart-statlog",
-  "evaluation_report_path": "models/evaluation_report.json"
+  "evaluation_report_path": "models/evaluation_report.json",
+  "confusion_matrix_image": "docs/images/confusion_matrix.png"
 }

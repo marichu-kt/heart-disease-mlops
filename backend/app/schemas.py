@@ -124,7 +124,7 @@ class PredictionResponse(BaseModel):
                 "label": "Disease",
                 "probability": 0.82,
                 "risk_level": "High",
-                "model_version": "v2.0.0",
+                "model_version": "v3.0.0",
                 "inference_time_ms": 4.7,
                 "probabilities": {
                     "no_disease": 0.18,
@@ -172,6 +172,13 @@ class ModelInfoResponse(BaseModel):
     version: str = Field(..., description="Versión del modelo cargado.")
     algorithm: str = Field(..., description="Pipeline o algoritmo usado por el modelo.")
     accuracy: Optional[float] = Field(None, description="Exactitud registrada durante la evaluación del modelo.")
+    precision: Optional[float] = Field(None, description="Precisión registrada durante la evaluación del modelo.")
+    recall: Optional[float] = Field(None, description="Recall registrado durante la evaluación del modelo.")
+    f1_score: Optional[float] = Field(None, description="F1-score registrado durante la evaluación del modelo.")
+    roc_auc: Optional[float] = Field(None, description="ROC-AUC registrado cuando el modelo permite estimarlo.")
+    selected_metric: Optional[str] = Field(None, description="Métrica principal usada para seleccionar el modelo activo.")
     created_at: Optional[str] = Field(None, description="Fecha de creación del artefacto, si está disponible.")
     input_features: List[str] = Field(..., description="Variables de entrada esperadas por el modelo.")
     model_path: str = Field(..., description="Ruta del artefacto joblib cargado.")
+    dataset_source: Optional[str] = Field(None, description="Fuente del dataset usado durante el entrenamiento.")
+    evaluation_report_path: Optional[str] = Field(None, description="Ruta del reporte de evaluación asociado.")

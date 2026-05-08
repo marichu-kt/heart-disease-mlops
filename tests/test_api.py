@@ -36,8 +36,12 @@ def test_info_endpoint():
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["model_name"] == "heart_disease_mlp"
-    assert payload["version"] == "v2.0.0"
+    assert payload["model_name"] == "heart_disease_best_model"
+    assert payload["version"] == "v3.0.0"
+    assert payload["algorithm"] == "StandardScaler + LogisticRegression"
+    assert payload["selected_metric"] == "recall"
+    assert payload["recall"] >= 0.9
+    assert payload["roc_auc"] is not None
     assert "age" in payload["input_features"]
 
 
@@ -49,8 +53,8 @@ def test_version_endpoint():
     payload = response.json()
     assert payload["app_name"] == "Heart Disease MLOps API"
     assert payload["app_version"] == "1.0.0"
-    assert payload["model_version"] == "v2.0.0"
-    assert payload["model_name"] == "heart_disease_mlp"
+    assert payload["model_version"] == "v3.0.0"
+    assert payload["model_name"] == "heart_disease_best_model"
     assert payload["environment"] == "local"
     assert "timestamp" in payload
 
@@ -64,7 +68,7 @@ def test_predict_endpoint():
     assert payload["prediction"] in [0, 1]
     assert payload["label"] in ["Disease", "No Disease"]
     assert payload["risk_level"] in ["Low", "Medium", "High"]
-    assert payload["model_version"] == "v2.0.0"
+    assert payload["model_version"] == "v3.0.0"
     assert isinstance(payload["inference_time_ms"], float)
     assert payload["inference_time_ms"] >= 0
     assert "probabilities" in payload
