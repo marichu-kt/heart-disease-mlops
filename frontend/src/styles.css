@@ -302,6 +302,10 @@ select:focus-visible {
   box-shadow: var(--shadow-card);
 }
 
+.dashboardCard:hover {
+  border-color: color-mix(in srgb, var(--border) 78%, var(--accent));
+}
+
 .summaryCard {
   min-height: 132px;
   padding: 18px;
@@ -525,17 +529,39 @@ select:focus-visible {
   cursor: pointer;
 }
 
+.secondaryButton {
+  display: inline-flex;
+  width: max-content;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent);
+  background: var(--surface);
+  font-weight: 740;
+  cursor: pointer;
+}
+
 .primaryButton:hover:not(:disabled) {
   border-color: var(--accent-hover);
   background: var(--accent-hover);
   transform: translateY(-1px);
 }
 
+.secondaryButton:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+  background: var(--accent-subtle);
+}
+
 [data-theme="dark"] .primaryButton {
   color: #07111f;
 }
 
-.primaryButton:disabled {
+.primaryButton:disabled,
+.secondaryButton:disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }
@@ -588,17 +614,36 @@ select:focus-visible {
 
 .emptyResult {
   display: grid;
-  gap: 8px;
+  justify-items: start;
+  gap: 10px;
   margin: 18px;
-  padding: 22px;
+  padding: 24px;
   color: var(--text);
   background: var(--surface-muted);
   border: 1px dashed var(--border);
   border-radius: 8px;
 }
 
+.emptyStateIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.loadingDot {
+  letter-spacing: 0.04em;
+}
+
 .emptyResult strong {
-  font-size: 1.08rem;
+  font-size: 1.14rem;
   line-height: 1.25;
 }
 

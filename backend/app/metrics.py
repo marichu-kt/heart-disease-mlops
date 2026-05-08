@@ -57,6 +57,38 @@ HEART_MODEL_INFO = Gauge(
 HEART_API_UP = Gauge("heart_api_up", "API health status. 1 means healthy.")
 
 
+def initialize_metric_series() -> None:
+    """Create zero-valued series that should be visible before traffic arrives."""
+    api_endpoints = [
+        ("GET", "/health"),
+        ("GET", "/version"),
+        ("GET", "/info"),
+        ("GET", "/metrics"),
+        ("POST", "/predict"),
+        ("POST", "/predict/batch"),
+    ]
+    prediction_endpoints = ["/predict", "/predict/batch"]
+
+    for method, endpoint in api_endpoints:
+        API_REQUEST_ERRORS_TOTAL.labels(method=method, endpoint=endpoint).inc(0)
+
+    for endpoint in prediction_endpoints:
+        HEART_PREDICTIONS_TOTAL.labels(endpoint=endpoint).inc(0)
+        HEART_PREDICTION_ERRORS_TOTAL.labels(endpoint=endpoint).inc(0)
+
+    for prediction, label, risk_level in [
+        ("0", "No Disease", "Low"),
+        ("0", "No Disease", "Medium"),
+        ("1", "Disease", "Medium"),
+        ("1", "Disease", "High"),
+    ]:
+        HEART_PREDICTIONS_BY_CLASS_TOTAL.labels(
+            prediction=prediction,
+            label=label,
+            risk_level=risk_level,
+        ).inc(0)
+
+
 class PrometheusMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         start = time.perf_counter()

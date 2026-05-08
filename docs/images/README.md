@@ -1,10 +1,14 @@
-# Capturas pendientes
+# Capturas Del Proyecto
 
-Esta carpeta está preparada para incluir las capturas finales de la demo:
+Esta carpeta contiene o espera capturas reales generadas desde la aplicación ejecutándose con Docker Compose.
 
-- `frontend.png`
+Rutas esperadas:
+
+- `frontend-light.png`
+- `frontend-dark.png`
 - `swagger.png`
-- `prometheus.png`
-- `grafana.png`
+- `prometheus-targets.png`
+- `prometheus-graph.png`
+- `grafana-dashboard.png`
 
-No se generan automáticamente porque Docker no está disponible en la distro WSL usada para preparar el proyecto. Después de ejecutar `docker compose up --build`, añade aquí las capturas reales para que se muestren en el README principal.
+No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`.

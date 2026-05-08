@@ -14,6 +14,7 @@ from .metrics import (
     HEART_PREDICTIONS_BY_CLASS_TOTAL,
     HEART_PREDICTIONS_TOTAL,
     PrometheusMiddleware,
+    initialize_metric_series,
     metrics_response,
 )
 from .model_service import ModelService
@@ -31,6 +32,41 @@ from .schemas import (
 APP_NAME = "Heart Disease MLOps API"
 APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
 APP_ENVIRONMENT = os.getenv("APP_ENVIRONMENT", "local")
+API_DESCRIPTION = """
+API de inferencia para el proyecto **Heart Disease MLOps**.
+
+Esta API permite evaluar de forma académica el riesgo de enfermedad cardíaca a partir de variables clínicas del dataset original del taller. El servicio carga el modelo versionado más reciente, expone endpoints de predicción individual y batch, publica metadatos del modelo y entrega métricas en formato Prometheus para observabilidad.
+
+**Endpoints principales**
+
+- `GET /health`: estado operativo de la API y carga del modelo.
+- `GET /version`: versión de la aplicación, entorno y modelo activo.
+- `GET /info`: metadatos del modelo cargado.
+- `POST /predict`: predicción individual con probabilidad, riesgo y tiempo de inferencia.
+- `POST /predict/batch`: predicciones para varios pacientes.
+- `GET /metrics`: métricas Prometheus para Prometheus y Grafana.
+
+**Aviso importante**: resultado orientativo para uso académico. No sustituye una valoración médica profesional.
+"""
+
+OPENAPI_TAGS = [
+    {
+        "name": "System",
+        "description": "Estado de la aplicación, versión y disponibilidad del servicio.",
+    },
+    {
+        "name": "Model",
+        "description": "Metadatos del modelo de Machine Learning cargado por la API.",
+    },
+    {
+        "name": "Prediction",
+        "description": "Inferencia individual y batch para evaluación de riesgo cardíaco.",
+    },
+    {
+        "name": "Monitoring",
+        "description": "Métricas operativas compatibles con Prometheus.",
+    },
+]
 
 logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO").upper(),
@@ -50,6 +86,7 @@ async def lifespan(_: FastAPI):
     try:
         logger.info("Starting API and loading model")
         model_service.load_latest_model()
+        initialize_metric_series()
         info = model_service.model_info()
         HEART_MODEL_INFO.labels(
             model_name=info["model_name"],
@@ -72,8 +109,17 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(
     title=APP_NAME,
-    description="API FastAPI para predicción de enfermedad cardíaca con modelo MLP versionado.",
+    description=API_DESCRIPTION,
     version=APP_VERSION,
+    contact={
+        "name": "Heart Disease MLOps Project",
+        "url": "https://github.com/marichu-kt/heart-disease-mlops",
+    },
+    license_info={
+        "name": "Academic project",
+        "url": "https://github.com/marichu-kt/heart-disease-mlops",
+    },
+    openapi_tags=OPENAPI_TAGS,
     lifespan=lifespan,
 )
 
@@ -101,7 +147,13 @@ async def root() -> dict:
     }
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get(
+    "/health",
+    response_model=HealthResponse,
+    tags=["System"],
+    summary="Estado de salud de la API",
+    description="Devuelve si la API está operativa, si el modelo está cargado y la versión activa del modelo.",
+)
 async def health() -> HealthResponse:
     status = "healthy" if model_service.loaded else "unhealthy"
     HEART_API_UP.set(1 if model_service.loaded else 0)
@@ -113,7 +165,13 @@ async def health() -> HealthResponse:
     )
 
 
-@app.get("/version", response_model=VersionResponse)
+@app.get(
+    "/version",
+    response_model=VersionResponse,
+    tags=["System"],
+    summary="Versión de aplicación y modelo",
+    description="Devuelve metadatos de versión de la API, entorno actual y modelo versionado cargado.",
+)
 async def version() -> VersionResponse:
     model_name = model_service.metadata.get("model_name", "unavailable")
     model_version = model_service.version if model_service.loaded else "unavailable"
@@ -127,7 +185,13 @@ async def version() -> VersionResponse:
     )
 
 
-@app.get("/info", response_model=ModelInfoResponse)
+@app.get(
+    "/info",
+    response_model=ModelInfoResponse,
+    tags=["Model"],
+    summary="Información del modelo activo",
+    description="Devuelve nombre, versión, algoritmo, exactitud, features de entrada y ruta del artefacto cargado.",
+)
 async def info() -> ModelInfoResponse:
     try:
         return ModelInfoResponse(**model_service.model_info())
@@ -136,7 +200,16 @@ async def info() -> ModelInfoResponse:
         raise HTTPException(status_code=503, detail="El modelo no está disponible.") from exc
 
 
-@app.post("/predict", response_model=PredictionResponse)
+@app.post(
+    "/predict",
+    response_model=PredictionResponse,
+    tags=["Prediction"],
+    summary="Predicción individual de riesgo cardíaco",
+    description=(
+        "Recibe las 13 variables clínicas esperadas por el modelo y devuelve predicción, "
+        "etiqueta legible, probabilidad, nivel de riesgo, versión del modelo y tiempo de inferencia."
+    ),
+)
 async def predict(patient: PatientData) -> PredictionResponse:
     logger.info("Prediction request received: endpoint=/predict")
     try:
@@ -171,7 +244,13 @@ async def predict(patient: PatientData) -> PredictionResponse:
     return PredictionResponse(**result.__dict__)
 
 
-@app.post("/predict/batch", response_model=BatchPredictionResponse)
+@app.post(
+    "/predict/batch",
+    response_model=BatchPredictionResponse,
+    tags=["Prediction"],
+    summary="Predicción batch de riesgo cardíaco",
+    description="Recibe entre 1 y 100 pacientes y devuelve una predicción individual para cada registro.",
+)
 async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionResponse:
     logger.info("Batch prediction request received: endpoint=/predict/batch count=%s", len(request.patients))
     try:
@@ -213,6 +292,14 @@ async def predict_batch(request: BatchPredictionRequest) -> BatchPredictionRespo
     )
 
 
-@app.get("/metrics")
+@app.get(
+    "/metrics",
+    tags=["Monitoring"],
+    summary="Métricas Prometheus",
+    description=(
+        "Expone métricas en texto plano con formato Prometheus. Este endpoint está pensado para scraping "
+        "automático por Prometheus, no como dashboard visual para usuarios finales."
+    ),
+)
 async def metrics():
     return metrics_response()
