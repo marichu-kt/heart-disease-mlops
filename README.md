@@ -54,7 +54,7 @@ Guía completa: [`docs/demo-guide.md`](docs/demo-guide.md).
 Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca en un proyecto final profesional de MLOps:
 
 - API documentada y lista para integración.
-- Modelo mejorado con red neuronal `MLPClassifier`.
+- Entrenamiento profesional con comparación de varios modelos y selección automática del mejor artefacto.
 - Versionado de modelos en `models/`.
 - Frontend visual, responsive y útil para una demo.
 - Métricas compatibles con Prometheus.
@@ -89,7 +89,7 @@ No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-
 | Área | Tecnología |
 |---|---|
 | API | FastAPI, Pydantic, Uvicorn |
-| ML | scikit-learn, `StandardScaler`, `MLPClassifier`, joblib |
+| ML | scikit-learn, `LogisticRegression`, `RandomForestClassifier`, `GradientBoostingClassifier`, `MLPClassifier`, `SVC`, joblib |
 | Frontend | React, Vite, CSS responsive |
 | Métricas | prometheus-client |
 | Monitorización | Prometheus, Grafana |
@@ -118,7 +118,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 | Versionado de modelo | Los artefactos se conservan en `models/` y se cargan desde metadata. |
 | Métricas | `/metrics` expone requests, errores, latencia e inferencias. |
 | Model Card | `docs/model-card.md` documenta uso previsto, límites y riesgos. |
-| Evaluación | `models/evaluation_report.json` registra accuracy, precision, recall, F1 y matriz de confusión. |
+| Evaluación | `models/evaluation_report.json` registra accuracy, precision, recall, F1, ROC-AUC y matriz de confusión para todos los modelos comparados. |
 | Logging | La API registra carga de modelo, versión, peticiones, inferencias y errores de forma clara. |
 
 ## 6. Arquitectura General
@@ -127,7 +127,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 flowchart LR
     Usuario["Usuario"] --> Frontend["Frontend React<br/>localhost:3000"]
     Frontend --> API["API FastAPI<br/>localhost:8000"]
-    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v2_mlp.joblib"]
+    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v3_best.joblib"]
     API --> Metrics["/metrics"]
     Metrics --> Prometheus["Prometheus<br/>localhost:9090"]
     Prometheus --> Grafana["Grafana<br/>localhost:3001"]
@@ -141,7 +141,7 @@ flowchart TD
     B --> C["POST /predict"]
     C --> D["API valida el schema Pydantic"]
     D --> E["ModelService prepara DataFrame"]
-    E --> F["Pipeline StandardScaler + MLPClassifier"]
+    E --> F["Modelo seleccionado v3<br/>StandardScaler + LogisticRegression"]
     F --> G["Predicción y probabilidad"]
     G --> H["API devuelve JSON"]
     H --> I["Frontend muestra riesgo, probabilidad y versión"]
@@ -182,6 +182,7 @@ heart-disease-mlops/
 ├── models/
 │   ├── heart_model_v1_logistic.joblib
 │   ├── heart_model_v2_mlp.joblib
+│   ├── heart_model_v3_best.joblib
 │   ├── evaluation_report.json
 │   └── model_metadata.json
 ├── monitoring/
@@ -238,16 +239,18 @@ El script admite alias habituales del dataset UCI/OpenML, como `chest_pain`, `re
 
 ## 11. Modelo De Machine Learning
 
-El modelo actual se genera con:
+La versión actual ya no entrena un único modelo fijo. `backend/train_model.py` compara varios estimadores de scikit-learn y selecciona automáticamente el mejor según `recall`, usando `f1_score`, `roc_auc` y `accuracy` como desempates.
+
+El modelo seleccionado actualmente se genera con:
 
 ```text
-StandardScaler + MLPClassifier
+StandardScaler + LogisticRegression
 ```
 
 Archivo generado:
 
 ```text
-models/heart_model_v2_mlp.joblib
+models/heart_model_v3_best.joblib
 ```
 
 Metadata generada:
@@ -266,41 +269,50 @@ Ejemplo de metadata:
 
 ```json
 {
-  "model_name": "heart_disease_mlp",
-  "version": "v2.0.0",
-  "algorithm": "StandardScaler + MLPClassifier",
-  "accuracy": 0.7407,
-  "precision": 0.7083,
-  "recall": 0.7083,
-  "f1_score": 0.7083,
+  "model_name": "heart_disease_best_model",
+  "version": "v3.0.0",
+  "algorithm": "StandardScaler + LogisticRegression",
+  "accuracy": 0.8519,
+  "precision": 0.7857,
+  "recall": 0.9167,
+  "f1_score": 0.8462,
+  "roc_auc": 0.8958,
+  "selected_metric": "recall",
   "input_features": ["age", "sex", "..."],
-  "model_path": "models/heart_model_v2_mlp.joblib",
+  "model_path": "models/heart_model_v3_best.joblib",
   "evaluation_report_path": "models/evaluation_report.json"
 }
 ```
 
 ## Reporte De Evaluación
 
-`models/evaluation_report.json` resume la evaluación del modelo actual sobre el split de test usado en entrenamiento:
+`models/evaluation_report.json` resume la evaluación completa sobre el split de test usado en entrenamiento. Incluye los modelos comparados, el mejor modelo seleccionado, la matriz de confusión, la fuente del dataset y el criterio de selección.
 
 | Métrica | Valor actual |
 |---|---:|
-| Accuracy | 0.7407 |
-| Precision | 0.7083 |
-| Recall | 0.7083 |
-| F1-score | 0.7083 |
+| Accuracy | 0.8519 |
+| Precision | 0.7857 |
+| Recall | 0.9167 |
+| F1-score | 0.8462 |
+| ROC-AUC | 0.8958 |
 
-También incluye la matriz de confusión, la versión del modelo, el algoritmo, la fuente del dataset y la fecha de generación. Este archivo ayuda a defender el proyecto como flujo MLOps evaluable, no solo como API de inferencia.
+La matriz de confusión del modelo seleccionado se genera como imagen en `docs/images/confusion_matrix.png`.
 
-## 12. Por Qué Se Usa MLPClassifier
+![Matriz de confusión](docs/images/confusion_matrix.png)
 
-`MLPClassifier` permite añadir una red neuronal sencilla dentro del ecosistema scikit-learn. Es adecuado para este proyecto porque:
+## 12. Por Qué Se Compara Más De Un Modelo
 
-- Encaja en un `Pipeline` junto con `StandardScaler`.
-- Expone `predict` y `predict_proba`, útiles para la API.
-- Es fácil de serializar con `joblib`.
-- Supone una mejora conceptual frente a un modelo lineal básico del taller.
-- Mantiene el proyecto entendible para una presentación académica.
+Comparar varios algoritmos hace que el proyecto sea más defendible: no se elige un modelo porque sea más vistoso, sino por su comportamiento medido en un split de test reproducible.
+
+Los modelos evaluados son:
+
+- `LogisticRegression` con `StandardScaler`.
+- `RandomForestClassifier`.
+- `GradientBoostingClassifier`.
+- `MLPClassifier` con `StandardScaler`.
+- `SVC` con `StandardScaler` y `probability=True`.
+
+El criterio principal de selección es `recall`. En un contexto clínico académico interesa reducir falsos negativos, es decir, detectar correctamente el mayor número posible de casos con riesgo. Para evitar escoger un modelo con recall alto pero rendimiento global pobre, el script desempata por `f1_score`, después por `roc_auc` y finalmente por `accuracy`.
 
 ## 13. Versionado Del Modelo
 
@@ -309,16 +321,22 @@ Los modelos se guardan en `models/` con nombre versionado:
 | Versión | Archivo | Estado |
 |---|---|---|
 | v1 | `heart_model_v1_logistic.joblib` | Modelo original del taller conservado. |
-| v2 | `heart_model_v2_mlp.joblib` | Modelo MLP actual cargado por la API. |
+| v2 | `heart_model_v2_mlp.joblib` | Modelo MLP conservado como versión anterior. |
+| v3 | `heart_model_v3_best.joblib` | Mejor modelo seleccionado automáticamente y cargado por la API. |
 
 La API carga el modelo indicado por `models/model_metadata.json`. Si se añade una versión futura, debe actualizarse el metadata para apuntar al nuevo archivo.
 
 ## Comparativa De Modelos
 
-| Versión | Modelo | Archivo | Estado |
-|---|---|---|---|
-| v1 | Regresión logística original del taller | `models/heart_model_v1_logistic.joblib` | Conservado como referencia histórica. |
-| v2 | `StandardScaler + MLPClassifier` | `models/heart_model_v2_mlp.joblib` | Modelo actual usado por la API. |
+| Modelo evaluado | Accuracy | Precision | Recall | F1-score | ROC-AUC | Estado |
+|---|---:|---:|---:|---:|---:|---|
+| `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8958 | Seleccionado como v3. |
+| `RandomForestClassifier` | 0.8333 | 0.8000 | 0.8333 | 0.8163 | 0.8806 | Comparado. |
+| `GradientBoostingClassifier` | 0.8148 | 0.7500 | 0.8750 | 0.8077 | 0.8861 | Comparado. |
+| `StandardScaler + MLPClassifier` | 0.7407 | 0.7083 | 0.7083 | 0.7083 | 0.8847 | Conservado como v2. |
+| `StandardScaler + SVC` | 0.8148 | 0.7692 | 0.8333 | 0.8000 | 0.8806 | Comparado. |
+
+El detalle completo está en `models/evaluation_report.json`. El modelo v1 del taller se mantiene como referencia histórica en `models/heart_model_v1_logistic.joblib`.
 
 La documentación detallada del modelo está en [`docs/model-card.md`](docs/model-card.md).
 
@@ -361,8 +379,8 @@ Ejemplo de respuesta de `/version`:
 {
   "app_name": "Heart Disease MLOps API",
   "app_version": "1.0.0",
-  "model_version": "v2.0.0",
-  "model_name": "heart_disease_mlp",
+  "model_version": "v3.0.0",
+  "model_name": "heart_disease_best_model",
   "environment": "local",
   "timestamp": "2026-05-08T10:18:13.703385+00:00"
 }
@@ -398,7 +416,7 @@ Respuesta esperada:
   "label": "Disease",
   "probability": 0.82,
   "risk_level": "High",
-  "model_version": "v2.0.0",
+  "model_version": "v3.0.0",
   "inference_time_ms": 3.4,
   "probabilities": {
     "no_disease": 0.18,
@@ -651,9 +669,10 @@ python backend/train_model.py --data-path data/heart.csv
 Salida esperada:
 
 ```text
-models/heart_model_v2_mlp.joblib
+models/heart_model_v3_best.joblib
 models/model_metadata.json
 models/evaluation_report.json
+docs/images/confusion_matrix.png
 ```
 
 ## 20. Cómo Ejecutar Los Tests
@@ -685,6 +704,7 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Prometheus targets | `docs/images/prometheus-targets.png` |
 | Prometheus graph | `docs/images/prometheus-graph.png` |
 | Grafana dashboard | `docs/images/grafana-dashboard.png` |
+| Matriz de confusión | `docs/images/confusion_matrix.png` |
 
 ### Frontend Claro
 
@@ -709,6 +729,10 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 ### Grafana
 
 ![Grafana dashboard](docs/images/grafana-dashboard.png)
+
+### Matriz De Confusión
+
+![Matriz de confusión](docs/images/confusion_matrix.png)
 
 ## 22. Posibles Problemas Y Soluciones
 
@@ -739,9 +763,9 @@ Antes de hacer público el repositorio, revisa:
 - Ampliar CI/CD con publicación de imágenes Docker y release automática.
 - Persistir métricas y logs con almacenamiento externo.
 - Añadir autenticación para el frontend y la API.
-- Comparar varias familias de modelos antes de publicar una versión.
+- Registrar experimentos y comparativas en una herramienta dedicada como MLflow.
 - Añadir alertas en Grafana para estado API, errores y latencia p95.
 
 ## 24. Conclusión
 
-Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal versionado, interfaz visual, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller y documenta claramente que el ZIP no incluía dataset CSV, dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.
+Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo versionado seleccionado mediante evaluación comparativa, interfaz visual, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller y documenta claramente que el ZIP no incluía dataset CSV, dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.

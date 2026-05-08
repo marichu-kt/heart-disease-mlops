@@ -1,20 +1,312 @@
 {
-  "version": "v2.0.0",
-  "algorithm": "StandardScaler + MLPClassifier",
-  "accuracy": 0.7407,
-  "precision": 0.7083,
-  "recall": 0.7083,
-  "f1_score": 0.7083,
+  "version": "v3.0.0",
+  "selected_metric": "recall",
+  "selection_criterion": "maximize recall to reduce false negatives in an academic clinical-risk context; ties are resolved by f1_score, roc_auc and accuracy",
+  "best_model": {
+    "name": "LogisticRegression",
+    "algorithm": "StandardScaler + LogisticRegression",
+    "accuracy": 0.8519,
+    "precision": 0.7857,
+    "recall": 0.9167,
+    "f1_score": 0.8462,
+    "roc_auc": 0.8958,
+    "confusion_matrix": [
+      [
+        24,
+        6
+      ],
+      [
+        2,
+        22
+      ]
+    ],
+    "classification_report": {
+      "No Disease": {
+        "precision": 0.9230769230769231,
+        "recall": 0.8,
+        "f1-score": 0.8571428571428571,
+        "support": 30.0
+      },
+      "Disease": {
+        "precision": 0.7857142857142857,
+        "recall": 0.9166666666666666,
+        "f1-score": 0.8461538461538461,
+        "support": 24.0
+      },
+      "accuracy": 0.8518518518518519,
+      "macro avg": {
+        "precision": 0.8543956043956045,
+        "recall": 0.8583333333333334,
+        "f1-score": 0.8516483516483516,
+        "support": 54.0
+      },
+      "weighted avg": {
+        "precision": 0.8620268620268621,
+        "recall": 0.8518518518518519,
+        "f1-score": 0.8522588522588521,
+        "support": 54.0
+      }
+    }
+  },
+  "models_compared": [
+    {
+      "name": "LogisticRegression",
+      "algorithm": "StandardScaler + LogisticRegression",
+      "accuracy": 0.8519,
+      "precision": 0.7857,
+      "recall": 0.9167,
+      "f1_score": 0.8462,
+      "roc_auc": 0.8958,
+      "confusion_matrix": [
+        [
+          24,
+          6
+        ],
+        [
+          2,
+          22
+        ]
+      ],
+      "classification_report": {
+        "No Disease": {
+          "precision": 0.9230769230769231,
+          "recall": 0.8,
+          "f1-score": 0.8571428571428571,
+          "support": 30.0
+        },
+        "Disease": {
+          "precision": 0.7857142857142857,
+          "recall": 0.9166666666666666,
+          "f1-score": 0.8461538461538461,
+          "support": 24.0
+        },
+        "accuracy": 0.8518518518518519,
+        "macro avg": {
+          "precision": 0.8543956043956045,
+          "recall": 0.8583333333333334,
+          "f1-score": 0.8516483516483516,
+          "support": 54.0
+        },
+        "weighted avg": {
+          "precision": 0.8620268620268621,
+          "recall": 0.8518518518518519,
+          "f1-score": 0.8522588522588521,
+          "support": 54.0
+        }
+      }
+    },
+    {
+      "name": "RandomForestClassifier",
+      "algorithm": "RandomForestClassifier",
+      "accuracy": 0.8333,
+      "precision": 0.8,
+      "recall": 0.8333,
+      "f1_score": 0.8163,
+      "roc_auc": 0.8806,
+      "confusion_matrix": [
+        [
+          25,
+          5
+        ],
+        [
+          4,
+          20
+        ]
+      ],
+      "classification_report": {
+        "No Disease": {
+          "precision": 0.8620689655172413,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.847457627118644,
+          "support": 30.0
+        },
+        "Disease": {
+          "precision": 0.8,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.8163265306122449,
+          "support": 24.0
+        },
+        "accuracy": 0.8333333333333334,
+        "macro avg": {
+          "precision": 0.8310344827586207,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.8318920788654445,
+          "support": 54.0
+        },
+        "weighted avg": {
+          "precision": 0.8344827586206897,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.8336215842269111,
+          "support": 54.0
+        }
+      }
+    },
+    {
+      "name": "GradientBoostingClassifier",
+      "algorithm": "GradientBoostingClassifier",
+      "accuracy": 0.8148,
+      "precision": 0.75,
+      "recall": 0.875,
+      "f1_score": 0.8077,
+      "roc_auc": 0.8861,
+      "confusion_matrix": [
+        [
+          23,
+          7
+        ],
+        [
+          3,
+          21
+        ]
+      ],
+      "classification_report": {
+        "No Disease": {
+          "precision": 0.8846153846153846,
+          "recall": 0.7666666666666667,
+          "f1-score": 0.8214285714285714,
+          "support": 30.0
+        },
+        "Disease": {
+          "precision": 0.75,
+          "recall": 0.875,
+          "f1-score": 0.8076923076923077,
+          "support": 24.0
+        },
+        "accuracy": 0.8148148148148148,
+        "macro avg": {
+          "precision": 0.8173076923076923,
+          "recall": 0.8208333333333333,
+          "f1-score": 0.8145604395604396,
+          "support": 54.0
+        },
+        "weighted avg": {
+          "precision": 0.8247863247863246,
+          "recall": 0.8148148148148148,
+          "f1-score": 0.8153235653235653,
+          "support": 54.0
+        }
+      }
+    },
+    {
+      "name": "MLPClassifier",
+      "algorithm": "StandardScaler + MLPClassifier",
+      "accuracy": 0.7407,
+      "precision": 0.7083,
+      "recall": 0.7083,
+      "f1_score": 0.7083,
+      "roc_auc": 0.8847,
+      "confusion_matrix": [
+        [
+          23,
+          7
+        ],
+        [
+          7,
+          17
+        ]
+      ],
+      "classification_report": {
+        "No Disease": {
+          "precision": 0.7666666666666667,
+          "recall": 0.7666666666666667,
+          "f1-score": 0.7666666666666667,
+          "support": 30.0
+        },
+        "Disease": {
+          "precision": 0.7083333333333334,
+          "recall": 0.7083333333333334,
+          "f1-score": 0.7083333333333334,
+          "support": 24.0
+        },
+        "accuracy": 0.7407407407407407,
+        "macro avg": {
+          "precision": 0.7375,
+          "recall": 0.7375,
+          "f1-score": 0.7375,
+          "support": 54.0
+        },
+        "weighted avg": {
+          "precision": 0.7407407407407407,
+          "recall": 0.7407407407407407,
+          "f1-score": 0.7407407407407407,
+          "support": 54.0
+        }
+      }
+    },
+    {
+      "name": "SVC",
+      "algorithm": "StandardScaler + SVC",
+      "accuracy": 0.8148,
+      "precision": 0.7692,
+      "recall": 0.8333,
+      "f1_score": 0.8,
+      "roc_auc": 0.8806,
+      "confusion_matrix": [
+        [
+          24,
+          6
+        ],
+        [
+          4,
+          20
+        ]
+      ],
+      "classification_report": {
+        "No Disease": {
+          "precision": 0.8571428571428571,
+          "recall": 0.8,
+          "f1-score": 0.8275862068965517,
+          "support": 30.0
+        },
+        "Disease": {
+          "precision": 0.7692307692307693,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.8,
+          "support": 24.0
+        },
+        "accuracy": 0.8148148148148148,
+        "macro avg": {
+          "precision": 0.8131868131868132,
+          "recall": 0.8166666666666667,
+          "f1-score": 0.8137931034482759,
+          "support": 54.0
+        },
+        "weighted avg": {
+          "precision": 0.818070818070818,
+          "recall": 0.8148148148148148,
+          "f1-score": 0.8153256704980844,
+          "support": 54.0
+        }
+      }
+    }
+  ],
   "confusion_matrix": [
     [
-      23,
-      7
+      24,
+      6
     ],
     [
-      7,
-      17
+      2,
+      22
     ]
   ],
   "dataset_source": "OpenML heart-statlog",
-  "created_at": "2026-05-08T10:10:18.699429+00:00"
+  "created_at": "2026-05-08T16:44:41.317013+00:00",
+  "input_features": [
+    "age",
+    "sex",
+    "chest",
+    "resting_blood_pressure",
+    "serum_cholestoral",
+    "fasting_blood_sugar",
+    "resting_electrocardiographic_results",
+    "maximum_heart_rate_achieved",
+    "exercise_induced_angina",
+    "oldpeak",
+    "slope",
+    "number_of_major_vessels",
+    "thal"
+  ],
+  "model_path": "models/heart_model_v3_best.joblib",
+  "confusion_matrix_image": "docs/images/confusion_matrix.png"
 }

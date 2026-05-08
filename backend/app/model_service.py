@@ -95,9 +95,16 @@ class ModelService:
             "version": self.version,
             "algorithm": self.metadata.get("algorithm", type(self.model).__name__),
             "accuracy": self.metadata.get("accuracy"),
+            "precision": self.metadata.get("precision"),
+            "recall": self.metadata.get("recall"),
+            "f1_score": self.metadata.get("f1_score"),
+            "roc_auc": self.metadata.get("roc_auc"),
+            "selected_metric": self.metadata.get("selected_metric"),
             "created_at": self.metadata.get("created_at"),
             "input_features": self.input_features,
             "model_path": str(self.model_path),
+            "dataset_source": self.metadata.get("dataset_source"),
+            "evaluation_report_path": self.metadata.get("evaluation_report_path"),
         }
 
     def predict(self, patient: PatientData) -> PredictionResult:
