@@ -23,7 +23,6 @@ const initialPatient = {
 const formSections = [
   {
     title: "Datos del paciente",
-    description: "Variables demográficas básicas.",
     fields: [
       { name: "age", label: "Edad", type: "number", min: 1, max: 120, step: 1, unit: "años" },
       {
@@ -39,7 +38,6 @@ const formSections = [
   },
   {
     title: "Parámetros cardiovasculares",
-    description: "Medidas clínicas registradas antes o durante la evaluación.",
     fields: [
       {
         name: "resting_blood_pressure",
@@ -91,7 +89,6 @@ const formSections = [
   },
   {
     title: "Síntomas y prueba de esfuerzo",
-    description: "Información asociada al dolor torácico y respuesta al ejercicio.",
     fields: [
       {
         name: "chest",
@@ -128,7 +125,6 @@ const formSections = [
   },
   {
     title: "Variables clínicas adicionales",
-    description: "Variables complementarias usadas por el dataset original.",
     fields: [
       {
         name: "number_of_major_vessels",
@@ -217,18 +213,12 @@ function isValidFieldValue(field, value) {
 }
 
 function FieldControl({ field, value, onChange }) {
-  const describedBy = `${field.name}-hint`;
-
   return (
     <label className="fieldControl">
       <span className="fieldLabel">{field.label}</span>
       <span className="fieldInputRow">
         {field.type === "select" ? (
-          <select
-            aria-describedby={describedBy}
-            value={value}
-            onChange={(event) => onChange(field.name, event.target.value)}
-          >
+          <select value={value} onChange={(event) => onChange(field.name, event.target.value)}>
             {field.options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -237,7 +227,6 @@ function FieldControl({ field, value, onChange }) {
           </select>
         ) : (
           <input
-            aria-describedby={describedBy}
             type="number"
             min={field.min}
             max={field.max}
@@ -248,10 +237,17 @@ function FieldControl({ field, value, onChange }) {
         )}
         {field.unit && <small>{field.unit}</small>}
       </span>
-      <em id={describedBy}>
-        {field.options ? "Valor codificado según el dataset" : `Rango admitido: ${field.min} - ${field.max}`}
-      </em>
     </label>
+  );
+}
+
+function SummaryCard({ label, value, detail, tone = "neutral" }) {
+  return (
+    <section className={`dashboardCard summaryCard tone-${tone}`}>
+      <span className="cardEyebrow">{label}</span>
+      <strong>{value}</strong>
+      <p>{detail}</p>
+    </section>
   );
 }
 
@@ -342,7 +338,6 @@ function App() {
 
   const apiOnline = status?.status === "healthy";
   const activeModelVersion = versionInfo?.model_version || modelInfo?.version || status?.model_version || "No disponible";
-  const activeModelName = versionInfo?.model_name || modelInfo?.model_name || "heart_disease_mlp";
   const activeAlgorithm = modelInfo?.algorithm || "StandardScaler + MLPClassifier";
   const diseasePercent = percentValue(probabilities.disease);
   const noDiseasePercent = percentValue(probabilities.noDisease);
@@ -350,32 +345,37 @@ function App() {
   const lastPredictionText = lastPredictionAt
     ? lastPredictionAt.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "medium" })
     : "Sin predicciones";
+  const inferenceValue = result?.inference_time_ms != null ? `${result.inference_time_ms} ms` : "Pendiente";
+  const resultLabel = result ? predictionText(result.label) : "Sin evaluación";
+  const resultTone = result?.risk_level === "High" ? "danger" : result?.risk_level === "Medium" ? "warning" : "success";
 
   return (
     <main className="appShell">
-      <header className="topBar">
+      <header className="masthead">
         <div className="brandBlock">
           <div className="brandMark" aria-hidden="true">
             HD
           </div>
           <div>
-            <p className="productLabel">Heart Disease MLOps</p>
+            <p>Heart Disease MLOps</p>
             <h1>Evaluación de riesgo cardíaco</h1>
           </div>
         </div>
-        <div className="headerControls" aria-label="Controles y estado del sistema">
-          <div className="headerStatus" aria-label="Estado resumido del sistema">
-            <span className={apiOnline ? "statusDot statusDotOk" : "statusDot statusDotWarn"} />
-            <span>API {apiStatusLabel(status)}</span>
-            <span>Modelo {activeModelVersion}</span>
-            <span>{activeAlgorithm}</span>
-          </div>
-          <nav className="topLinks" aria-label="Accesos técnicos principales">
+
+        <div className="mastheadActions" aria-label="Controles y estado del sistema">
+          <span className={apiOnline ? "statusBadge statusOk" : "statusBadge statusWarn"}>
+            API {apiStatusLabel(status)}
+          </span>
+          <span className="statusBadge">Modelo {activeModelVersion}</span>
+          <nav className="technicalLinks" aria-label="Accesos técnicos">
             <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
               Swagger
             </a>
             <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer">
               Metrics
+            </a>
+            <a href={PROMETHEUS_URL} target="_blank" rel="noreferrer">
+              Prometheus
             </a>
             <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
               Grafana
@@ -394,169 +394,135 @@ function App() {
         </div>
       </header>
 
-      <section className="dashboardGrid">
-        <section className="clinicalPanel" aria-labelledby="clinical-form-title">
-          <div className="panelHeader">
-            <div>
-              <p className="sectionKicker">Datos clínicos de entrada</p>
-              <h2 id="clinical-form-title">Formulario de evaluación</h2>
-            </div>
-            <p>Los campos mantienen la codificación esperada por la API para que la inferencia sea reproducible.</p>
-          </div>
-
-          <form className="clinicalForm" onSubmit={submitPrediction}>
-            {formSections.map((section) => (
-              <fieldset className="formSection" key={section.title}>
-                <legend>
-                  <span>{section.title}</span>
-                  <small>{section.description}</small>
-                </legend>
-                <div className="fieldGrid">
-                  {section.fields.map((field) => (
-                    <FieldControl
-                      key={field.name}
-                      field={field}
-                      value={patient[field.name]}
-                      onChange={updateField}
-                    />
-                  ))}
-                </div>
-              </fieldset>
-            ))}
-
-            {error && (
-              <div className="errorBanner" role="alert">
-                {error}
-              </div>
-            )}
-
-            <div className="formActions">
-              <button className="primaryButton" type="submit" disabled={loading || !requiredFieldsOk}>
-                {loading ? "Evaluando..." : "Evaluar riesgo"}
-              </button>
-              <span>{requiredFieldsOk ? "Formulario listo para inferencia" : "Hay valores fuera de rango"}</span>
-            </div>
-          </form>
+      <div className="dashboardPage">
+        <section className="summaryGrid" aria-label="Resumen del dashboard">
+          <SummaryCard
+            label="Estado del servicio"
+            value={apiStatusLabel(status)}
+            detail={`Modelo cargado: ${status?.model_loaded ? "sí" : "no"} · Entorno: ${versionInfo?.environment || "local"}`}
+            tone={apiOnline ? "success" : "warning"}
+          />
+          <SummaryCard
+            label="Modelo activo"
+            value={activeModelVersion}
+            detail={`${activeAlgorithm} · exactitud ${modelInfo?.accuracy != null ? formatPercent(modelInfo.accuracy) : "no disponible"}`}
+          />
+          <SummaryCard
+            label="Última inferencia"
+            value={inferenceValue}
+            detail={lastPredictionText}
+            tone={result ? resultTone : "neutral"}
+          />
+          <SummaryCard
+            label="Resultado actual"
+            value={resultLabel}
+            detail={result ? `Riesgo ${riskLabel(result.risk_level)} · enfermedad ${formatPercent(probabilities.disease)}` : "Ejecuta una evaluación para ver el score"}
+            tone={result ? resultTone : "neutral"}
+          />
         </section>
 
-        <aside className="insightsColumn" aria-label="Estado del sistema y resultado del modelo">
-          <section className="systemPanel">
-            <div className="panelHeader compact">
+        <section className="dashboardGrid">
+          <section className="dashboardCard formCard" aria-labelledby="clinical-form-title">
+            <div className="cardHeader">
               <div>
-                <p className="sectionKicker">Estado del servicio</p>
-                <h2>Resumen operativo</h2>
+                <span className="cardEyebrow">Datos clínicos de entrada</span>
+                <h2 id="clinical-form-title">Formulario de evaluación</h2>
               </div>
-            </div>
-            <dl className="definitionList">
-              <div>
-                <dt>API</dt>
-                <dd>{apiStatusLabel(status)}</dd>
-              </div>
-              <div>
-                <dt>Modelo cargado</dt>
-                <dd>{status?.model_loaded ? "Sí" : "No"}</dd>
-              </div>
-              <div>
-                <dt>Entorno</dt>
-                <dd>{versionInfo?.environment || "local"}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="systemPanel">
-            <h2>Modelo activo</h2>
-            <dl className="definitionList">
-              <div>
-                <dt>Nombre</dt>
-                <dd>{activeModelName}</dd>
-              </div>
-              <div>
-                <dt>Versión</dt>
-                <dd>{activeModelVersion}</dd>
-              </div>
-              <div>
-                <dt>Exactitud</dt>
-                <dd>{modelInfo?.accuracy != null ? formatPercent(modelInfo.accuracy) : "No disponible"}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="systemPanel">
-            <h2>Accesos técnicos</h2>
-            <nav className="linkList" aria-label="Accesos técnicos">
-              <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
-                Swagger
-              </a>
-              <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer">
-                Métricas API
-              </a>
-              <a href={PROMETHEUS_URL} target="_blank" rel="noreferrer">
-                Prometheus
-              </a>
-              <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
-                Grafana
-              </a>
-            </nav>
-          </section>
-
-          <section className="systemPanel">
-            <h2>Última inferencia</h2>
-            <p className="mutedText">{lastPredictionText}</p>
-          </section>
-
-          <section className="resultPanel" aria-label="Resultado del modelo">
-            <div className="panelHeader compact">
-              <div>
-                <p className="sectionKicker">Resultado del modelo</p>
-                <h2>Evaluación de riesgo</h2>
-              </div>
-              <span className="modelBadge">{activeModelVersion}</span>
+              <p>Los campos mantienen la codificación esperada por la API.</p>
             </div>
 
-            {!result && !loading && (
-              <div className="emptyResult">
-                <strong>Sin evaluación todavía</strong>
-                <p>Completa el formulario y ejecuta una predicción para ver el resultado, las probabilidades y el tiempo de inferencia.</p>
-              </div>
-            )}
-
-            {loading && (
-              <div className="emptyResult">
-                <strong>Evaluando caso</strong>
-                <p>La API está procesando la entrada y registrando métricas operativas.</p>
-              </div>
-            )}
-
-            {result && (
-              <div className="resultStack">
-                <section className={`outcomeBox risk-${result.risk_level?.toLowerCase()}`}>
-                  <span>Resultado final</span>
-                  <strong>{predictionText(result.label)}</strong>
-                  <p>Etiqueta del modelo: {result.label}</p>
-                </section>
-
-                <section className="riskScale" aria-label="Nivel de riesgo">
-                  <div className="riskScaleHeader">
-                    <span>Nivel de riesgo</span>
-                    <strong>{riskLabel(result.risk_level)}</strong>
-                  </div>
-                  <div className="riskSegments">
-                    {["Low", "Medium", "High"].map((level) => (
-                      <span
-                        key={level}
-                        className={result.risk_level === level ? `active segment-${level.toLowerCase()}` : ""}
-                      >
-                        {riskLabel(level)}
-                      </span>
+            <form className="clinicalForm" onSubmit={submitPrediction}>
+              {formSections.map((section) => (
+                <fieldset className="formSection" key={section.title}>
+                  <legend>{section.title}</legend>
+                  <div className="fieldGrid">
+                    {section.fields.map((field) => (
+                      <FieldControl
+                        key={field.name}
+                        field={field}
+                        value={patient[field.name]}
+                        onChange={updateField}
+                      />
                     ))}
                   </div>
-                </section>
+                </fieldset>
+              ))}
 
-                <section className="probabilityPanel">
-                  <div className="metricHeader">
-                    <span>Probabilidad estimada</span>
-                    <strong>{formatPercent(probabilities.disease)}</strong>
-                  </div>
+              <p className="formNote">Las variables categóricas conservan la codificación del dataset original.</p>
+
+              {error && (
+                <div className="errorBanner" role="alert">
+                  {error}
+                </div>
+              )}
+
+              <div className="formActions">
+                <button className="primaryButton" type="submit" disabled={loading || !requiredFieldsOk}>
+                  {loading ? "Evaluando..." : "Evaluar riesgo"}
+                </button>
+                <span>{requiredFieldsOk ? "Formulario listo" : "Hay valores fuera de rango"}</span>
+              </div>
+            </form>
+          </section>
+
+          <aside className="resultColumn" aria-label="Resultado y visualizaciones">
+            <section className="dashboardCard resultCard">
+              <div className="cardHeader">
+                <div>
+                  <span className="cardEyebrow">Resultado del modelo</span>
+                  <h2>Evaluación actual</h2>
+                </div>
+                <span className={`riskBadge risk-${result?.risk_level?.toLowerCase() || "pending"}`}>
+                  {result ? `Riesgo ${riskLabel(result.risk_level)}` : "Pendiente"}
+                </span>
+              </div>
+
+              {!result && !loading && (
+                <div className="emptyResult">
+                  <strong>Sin evaluación todavía</strong>
+                  <p>Completa el formulario y ejecuta una predicción para ver el resultado del modelo.</p>
+                </div>
+              )}
+
+              {loading && (
+                <div className="emptyResult">
+                  <strong>Evaluando caso</strong>
+                  <p>La API está procesando la entrada y registrando métricas operativas.</p>
+                </div>
+              )}
+
+              {result && (
+                <div className="resultHero">
+                  <span>Resultado principal</span>
+                  <strong>{predictionText(result.label)}</strong>
+                  <p>Probabilidad estimada de enfermedad: {formatPercent(probabilities.disease)}</p>
+                  <dl className="resultMeta">
+                    <div>
+                      <dt>Inferencia</dt>
+                      <dd>{result.inference_time_ms} ms</dd>
+                    </div>
+                    <div>
+                      <dt>Modelo</dt>
+                      <dd>{result.model_version}</dd>
+                    </div>
+                    <div>
+                      <dt>Última predicción</dt>
+                      <dd>{lastPredictionText}</dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+            </section>
+
+            <section className="dashboardCard probabilityCard">
+              <div className="cardHeader compact">
+                <div>
+                  <span className="cardEyebrow">Probabilidades estimadas</span>
+                  <h2>Distribución de salida</h2>
+                </div>
+              </div>
+              {result ? (
+                <>
                   <div className="probabilityBars">
                     <div>
                       <span>Enfermedad</span>
@@ -573,51 +539,50 @@ function App() {
                       <b>{noDiseasePercent}%</b>
                     </div>
                   </div>
-                </section>
-
-                <section className="inputSnapshot">
-                  <div className="metricHeader">
-                    <span>Resumen visual de entrada</span>
-                    <strong>Rangos del formulario</strong>
-                  </div>
-                  <div className="snapshotRows">
-                    {inputSummary.map((item) => (
-                      <div key={item.name}>
-                        <span>{item.label}</span>
-                        <div className="barTrack compactBar">
-                          <i style={{ width: `${rangePosition(patient[item.name], item.min, item.max)}%` }} />
-                        </div>
-                        <b>
-                          {patient[item.name]} {item.unit}
-                        </b>
-                      </div>
+                  <div className="riskScale" aria-label="Nivel de riesgo">
+                    {["Low", "Medium", "High"].map((level) => (
+                      <span
+                        key={level}
+                        className={result?.risk_level === level ? `active segment-${level.toLowerCase()}` : ""}
+                      >
+                        {riskLabel(level)}
+                      </span>
                     ))}
                   </div>
-                </section>
+                </>
+              ) : (
+                <p className="mutedCardText">La distribución de salida aparecerá después de la primera evaluación.</p>
+              )}
+            </section>
 
-                <dl className="resultDetails">
-                  <div>
-                    <dt>Tiempo de inferencia</dt>
-                    <dd>{result.inference_time_ms} ms</dd>
-                  </div>
-                  <div>
-                    <dt>Versión del modelo</dt>
-                    <dd>{result.model_version}</dd>
-                  </div>
-                  <div>
-                    <dt>Última predicción</dt>
-                    <dd>{lastPredictionText}</dd>
-                  </div>
-                </dl>
+            <section className="dashboardCard inputSnapshot">
+              <div className="cardHeader compact">
+                <div>
+                  <span className="cardEyebrow">Variables clave</span>
+                  <h2>Resumen de entrada</h2>
+                </div>
               </div>
-            )}
+              <div className="snapshotRows">
+                {inputSummary.map((item) => (
+                  <div key={item.name}>
+                    <span>{item.label}</span>
+                    <div className="barTrack compactBar">
+                      <i style={{ width: `${rangePosition(patient[item.name], item.min, item.max)}%` }} />
+                    </div>
+                    <b>
+                      {patient[item.name]} {item.unit}
+                    </b>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
+        </section>
+      </div>
 
-            <p className="academicNotice">
-              Resultado orientativo para uso académico. No sustituye una valoración médica profesional.
-            </p>
-          </section>
-        </aside>
-      </section>
+      <footer className="appFooter">
+        <p>Resultado orientativo para uso académico. No sustituye una valoración médica profesional.</p>
+      </footer>
     </main>
   );
 }

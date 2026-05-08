@@ -395,8 +395,9 @@ VITE_API_URL=http://localhost:8000
 Incluye:
 
 - Interfaz tipo dashboard clínico/técnico, sobria y orientada a producto.
-- Cabecera compacta con estado de API, modelo activo, algoritmo, accesos técnicos y selector de tema.
-- Columna de estado con servicio, metadata del modelo, última inferencia y accesos técnicos.
+- Cabecera compacta con estado de API, modelo activo, accesos técnicos y selector de tema.
+- Fila superior de métricas con estado del servicio, modelo activo, última inferencia y resultado actual.
+- Grid de dashboard con formulario clínico a la izquierda y resultado/visualizaciones a la derecha.
 - Formulario con las 13 variables clínicas agrupadas por secciones.
 - Selects para variables categóricas como sexo, dolor torácico, glucosa, angina, pendiente ST y thal.
 - Validación básica por rango.
@@ -410,16 +411,16 @@ Incluye:
 
 ## Diseño De Interfaz
 
-El rediseño evita la estética de landing page genérica. La pantalla se plantea como una herramienta interna de análisis de riesgo inspirada en criterios visuales de IBM Carbon Design System y PatternFly:
+El frontend se ha rediseñado siguiendo principios de [PatternFly Dashboard](https://www.patternfly.org/patterns/dashboard/design-guidelines/). La pantalla evita la estética de landing page y se plantea como una herramienta interna de evaluación clínica/MLOps:
 
-- estructura de dashboard profesional, no página promocional;
-- fondo gris claro en modo claro y fondo oscuro sobrio en modo oscuro;
-- superficies limpias, bordes finos, sombras mínimas y jerarquía compacta;
-- formulario clínico agrupado por secciones y campos categóricos con `select`;
-- cards funcionales para estado del servicio, modelo activo, resultado e inferencia;
+- cards con un propósito claro: estado del servicio, modelo activo, última inferencia y resultado actual;
+- métricas y resúmenes visibles en la parte superior para entender el sistema de un vistazo;
+- grid de dashboard con formulario clínico a la izquierda y resultado del modelo con más protagonismo a la derecha;
+- formulario agrupado por secciones clínicas y campos categóricos con `select`;
+- accesos técnicos discretos en el masthead, sin competir con la tarea principal;
 - visualizaciones basadas únicamente en datos reales del formulario, metadata del modelo y respuesta de la API;
-- toggle accesible de modo claro/oscuro con `aria-label`, foco visible y estado `aria-pressed`;
-- preferencia de tema guardada en `localStorage` y uso de `prefers-color-scheme: dark` cuando no hay preferencia previa;
+- modo claro/oscuro sobrio con preferencia guardada en `localStorage`;
+- uso de `prefers-color-scheme: dark` cuando no hay preferencia previa;
 - textos funcionales, sin claims comerciales ni lenguaje alarmista.
 
 ## Script De Demo Para Métricas

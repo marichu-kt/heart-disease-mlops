@@ -3,35 +3,35 @@
     Inter, "IBM Plex Sans", "Red Hat Text", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
   color-scheme: light;
-  --bg: #f4f4f4;
-  --bg-subtle: #e8eaed;
+  --bg: #f5f7fa;
   --surface: #ffffff;
-  --surface-alt: #f9fafb;
-  --surface-raised: #ffffff;
-  --header-bg: #161616;
-  --header-text: #f4f4f4;
-  --header-muted: #c6c6c6;
-  --text: #161616;
-  --text-muted: #525252;
-  --text-subtle: #6f6f6f;
-  --border: #d0d0d0;
-  --border-strong: #8d8d8d;
+  --surface-muted: #f8fafc;
+  --surface-strong: #eef2f6;
+  --masthead: #151b23;
+  --masthead-muted: #aeb7c2;
+  --masthead-text: #ffffff;
+  --text: #151f2a;
+  --text-muted: #52606d;
+  --text-subtle: #74808c;
+  --border: #d9dee7;
+  --border-subtle: #e8ecf2;
   --field-bg: #ffffff;
-  --field-border: #8d8d8d;
-  --accent: #0f62fe;
-  --accent-hover: #0353e9;
-  --accent-subtle: #edf5ff;
-  --success: #198038;
-  --success-subtle: #defbe6;
-  --warning: #b7791f;
-  --warning-subtle: #fff4ce;
-  --danger: #da1e28;
-  --danger-subtle: #fff1f1;
-  --chart-blue: #0f62fe;
-  --chart-green: #24a148;
-  --chart-neutral: #697077;
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --focus: 0 0 0 3px rgba(15, 98, 254, 0.28);
+  --field-border: #b8c0cc;
+  --accent: #0066cc;
+  --accent-hover: #004b95;
+  --accent-subtle: #eaf4ff;
+  --success: #3e8635;
+  --success-subtle: #edf8ed;
+  --warning: #f0ab00;
+  --warning-subtle: #fff7df;
+  --danger: #c9190b;
+  --danger-subtle: #fff0ee;
+  --neutral: #6a7380;
+  --neutral-subtle: #f1f3f5;
+  --shadow-card: 0 1px 2px rgba(21, 31, 42, 0.06), 0 8px 20px rgba(21, 31, 42, 0.04);
+  --shadow-soft: 0 1px 2px rgba(21, 31, 42, 0.08);
+  --radius: 8px;
+  --focus: 0 0 0 3px rgba(0, 102, 204, 0.24);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -39,35 +39,34 @@
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0f1117;
-  --bg-subtle: #161b22;
-  --surface: #1f242d;
-  --surface-alt: #252b34;
-  --surface-raised: #202731;
-  --header-bg: #0b0f14;
-  --header-text: #f4f4f4;
-  --header-muted: #a8b0ba;
-  --text: #f4f4f4;
-  --text-muted: #c1c7cd;
-  --text-subtle: #9aa4af;
-  --border: #3d4652;
-  --border-strong: #687383;
-  --field-bg: #111820;
-  --field-border: #687383;
-  --accent: #78a9ff;
+  --bg: #111821;
+  --surface: #1c2530;
+  --surface-muted: #222d3a;
+  --surface-strong: #2a3645;
+  --masthead: #0c1118;
+  --masthead-muted: #a8b2bf;
+  --masthead-text: #f6f8fa;
+  --text: #f3f7fb;
+  --text-muted: #c1c9d2;
+  --text-subtle: #93a0ad;
+  --border: #3d4958;
+  --border-subtle: #313c49;
+  --field-bg: #141c25;
+  --field-border: #566374;
+  --accent: #75a8ff;
   --accent-hover: #a6c8ff;
-  --accent-subtle: #162b45;
-  --success: #42be65;
-  --success-subtle: #17351f;
-  --warning: #f1c21b;
-  --warning-subtle: #332a12;
-  --danger: #ff8389;
-  --danger-subtle: #3a1c20;
-  --chart-blue: #78a9ff;
-  --chart-green: #42be65;
-  --chart-neutral: #a2a9b0;
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --focus: 0 0 0 3px rgba(120, 169, 255, 0.36);
+  --accent-subtle: #18324f;
+  --success: #6ec664;
+  --success-subtle: #19351e;
+  --warning: #f5c542;
+  --warning-subtle: #342a13;
+  --danger: #ff8f85;
+  --danger-subtle: #3c1d1b;
+  --neutral: #9aa6b2;
+  --neutral-subtle: #26313d;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --focus: 0 0 0 3px rgba(117, 168, 255, 0.34);
 }
 
 * {
@@ -100,7 +99,8 @@ select {
     background-color 140ms ease,
     border-color 140ms ease,
     color 140ms ease,
-    box-shadow 140ms ease;
+    box-shadow 140ms ease,
+    transform 140ms ease;
 }
 
 button:focus-visible,
@@ -116,23 +116,27 @@ select:focus-visible {
   background: var(--bg);
 }
 
-.topBar {
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  min-height: 76px;
+  gap: 18px;
+  min-height: 72px;
   padding: 14px 32px;
-  color: var(--header-text);
-  background: var(--header-bg);
+  color: var(--masthead-text);
+  background: var(--masthead);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-soft);
 }
 
 .brandBlock {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-width: 260px;
+  gap: 13px;
+  min-width: 255px;
 }
 
 .brandMark {
@@ -140,118 +144,117 @@ select:focus-visible {
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--header-text);
-  font-size: 0.78rem;
+  color: #ffffff;
+  background: var(--accent);
+  border-radius: 4px;
+  font-size: 0.82rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
-.productLabel,
-.sectionKicker {
-  margin: 0 0 4px;
-  color: var(--text-subtle);
-  font-size: 0.72rem;
+.brandBlock p,
+.cardEyebrow {
+  margin: 0;
+  color: var(--masthead-muted);
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.topBar .productLabel {
-  color: var(--header-muted);
-}
-
-h1,
-h2 {
+.brandBlock h1,
+.cardHeader h2 {
   margin: 0;
   letter-spacing: 0;
 }
 
-h1 {
-  color: var(--header-text);
-  font-size: 1.22rem;
+.brandBlock h1 {
+  color: var(--masthead-text);
+  font-size: 1.12rem;
   line-height: 1.25;
-  font-weight: 650;
-}
-
-h2 {
-  color: var(--text);
-  font-size: 1rem;
-  line-height: 1.3;
   font-weight: 700;
 }
 
-.headerControls {
+.mastheadActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 9px;
   flex-wrap: wrap;
 }
 
-.headerStatus,
-.topLinks {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.headerStatus {
-  color: var(--header-muted);
-  font-size: 0.8rem;
-  font-weight: 650;
-}
-
-.headerStatus span:not(.statusDot),
-.topLinks a,
+.statusBadge,
+.technicalLinks a,
 .themeToggle {
-  min-height: 32px;
+  min-height: 31px;
   display: inline-flex;
   align-items: center;
-  border-radius: 0;
+  border-radius: 999px;
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.headerStatus span:not(.statusDot) {
-  padding: 0 10px;
+.statusBadge {
+  padding: 0 11px;
+  color: var(--masthead-text);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
 }
 
-.topLinks a {
-  padding: 0 10px;
-  color: var(--header-text);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: transparent;
+.statusOk {
+  color: #dff4df;
+  border-color: rgba(110, 198, 100, 0.36);
+  background: rgba(62, 134, 53, 0.22);
 }
 
-.topLinks a:hover {
-  border-color: rgba(255, 255, 255, 0.34);
+.statusWarn {
+  color: #fff0bf;
+  border-color: rgba(245, 197, 66, 0.34);
+  background: rgba(240, 171, 0, 0.2);
+}
+
+.technicalLinks {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.technicalLinks a {
+  min-height: 25px;
+  padding: 0 9px;
+  color: var(--masthead-muted);
+}
+
+.technicalLinks a:hover {
+  color: var(--masthead-text);
   background: rgba(255, 255, 255, 0.08);
 }
 
 .themeToggle {
   gap: 8px;
-  padding: 0 12px;
-  color: var(--header-text);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 0 12px 0 8px;
+  color: var(--masthead-text);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   background: transparent;
   cursor: pointer;
 }
 
 .themeToggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .themeToggle span {
   position: relative;
-  width: 28px;
-  height: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background: rgba(255, 255, 255, 0.14);
+  width: 30px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.34);
 }
 
 .themeToggle span::after {
@@ -259,128 +262,155 @@ h2 {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 8px;
-  height: 8px;
-  background: var(--header-text);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--masthead-text);
 }
 
 [data-theme="dark"] .themeToggle span::after {
   transform: translateX(14px);
 }
 
-.statusDot {
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
+.dashboardPage {
+  width: min(1440px, calc(100% - 48px));
+  margin: 24px auto 0;
+  padding-bottom: 32px;
 }
 
-.statusDotOk {
-  background: var(--success);
-}
-
-.statusDotWarn {
-  background: var(--warning);
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .dashboardGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.55fr);
-  gap: 24px;
-  width: min(1440px, calc(100% - 48px));
-  margin: 24px auto 0;
-  padding-bottom: 48px;
+  grid-template-columns: minmax(0, 1.38fr) minmax(365px, 0.62fr);
+  gap: 20px;
+  align-items: start;
 }
 
-.clinicalPanel,
-.systemPanel,
-.resultPanel {
-  border: 1px solid var(--border);
+.dashboardCard {
+  position: relative;
+  overflow: hidden;
+  color: var(--text);
   background: var(--surface);
-  box-shadow: var(--shadow-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
 }
 
-.clinicalPanel {
-  align-self: start;
-}
-
-.clinicalPanel,
-.resultPanel {
-  padding: 0;
-}
-
-.insightsColumn {
-  display: grid;
-  gap: 16px;
-  align-self: start;
-}
-
-.systemPanel {
+.summaryCard {
+  min-height: 132px;
   padding: 18px;
 }
 
-.panelHeader {
+.summaryCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--neutral);
+}
+
+.summaryCard.tone-success::before {
+  background: var(--success);
+}
+
+.summaryCard.tone-warning::before {
+  background: var(--warning);
+}
+
+.summaryCard.tone-danger::before {
+  background: var(--danger);
+}
+
+.summaryCard .cardEyebrow,
+.cardHeader .cardEyebrow {
+  color: var(--text-subtle);
+}
+
+.summaryCard strong {
+  display: block;
+  margin-top: 13px;
+  color: var(--text);
+  font-size: clamp(1.15rem, 1.6vw, 1.55rem);
+  line-height: 1.18;
+  font-weight: 760;
+  overflow-wrap: anywhere;
+}
+
+.summaryCard p {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.cardHeader {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
+  gap: 18px;
   padding: 20px 22px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-muted);
 }
 
-.systemPanel .panelHeader {
-  margin: -18px -18px 16px;
-  padding: 16px 18px;
+.cardHeader.compact {
+  padding: 18px 20px;
 }
 
-.panelHeader > p {
-  max-width: 520px;
-  margin: 0;
+.cardHeader h2 {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.3;
+  font-weight: 750;
+}
+
+.cardHeader > p {
+  max-width: 330px;
+  margin: 2px 0 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.panelHeader.compact {
-  align-items: center;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  text-align: right;
 }
 
 .clinicalForm {
-  padding: 0 22px 22px;
+  display: grid;
 }
 
 .formSection {
+  display: block;
   margin: 0;
-  padding: 22px 0 0;
+  padding: 22px;
   border: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-subtle);
 }
 
-.clinicalForm .formSection:first-child {
+.formSection:first-of-type {
   border-top: 0;
 }
 
 .formSection legend {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  padding: 0 0 14px;
-}
-
-.formSection legend span {
+  display: block;
+  width: auto;
+  margin: 0 0 15px;
+  padding: 0;
   color: var(--text);
+  font-size: 0.94rem;
   font-weight: 750;
-}
-
-.formSection legend small {
-  color: var(--text-muted);
-  font-size: 0.86rem;
+  line-height: 1.35;
 }
 
 .fieldGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  gap: 15px 16px;
 }
 
 .fieldControl {
@@ -392,7 +422,7 @@ h2 {
 .fieldLabel {
   color: var(--text);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 690;
 }
 
 .fieldInputRow {
@@ -401,7 +431,7 @@ h2 {
   min-height: 42px;
   overflow: hidden;
   border: 1px solid var(--field-border);
-  border-bottom-width: 2px;
+  border-radius: 4px;
   background: var(--field-bg);
 }
 
@@ -420,32 +450,46 @@ h2 {
   padding: 0 11px;
   color: var(--text);
   background: transparent;
-  font-weight: 600;
+  font-weight: 610;
 }
 
 .fieldInputRow select {
   cursor: pointer;
 }
 
+.fieldInputRow option {
+  color: #151f2a;
+  background: #ffffff;
+}
+
+[data-theme="dark"] .fieldInputRow option {
+  color: #f3f7fb;
+  background: #1c2530;
+}
+
 .fieldInputRow small {
+  flex: 0 0 auto;
   padding-right: 11px;
   color: var(--text-subtle);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   white-space: nowrap;
 }
 
-.fieldControl em {
-  min-height: 16px;
-  color: var(--text-subtle);
-  font-size: 0.76rem;
-  font-style: normal;
+.formNote {
+  margin: 0 22px;
+  padding: 14px 0 0;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .errorBanner {
-  margin-top: 20px;
+  margin: 18px 22px 0;
   padding: 12px 14px;
   color: var(--danger);
-  border: 1px solid var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 48%, transparent);
+  border-radius: 6px;
   background: var(--danger-subtle);
   font-size: 0.9rem;
   font-weight: 700;
@@ -456,33 +500,39 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 22px;
+  margin: 20px 22px 22px;
   padding-top: 18px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .formActions span {
   color: var(--text-muted);
   font-size: 0.84rem;
-  font-weight: 650;
+  font-weight: 680;
 }
 
 .primaryButton {
   display: inline-flex;
-  min-width: 160px;
+  min-width: 164px;
   min-height: 42px;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--accent);
+  border-radius: 4px;
   color: #ffffff;
   background: var(--accent);
-  font-weight: 750;
+  font-weight: 740;
   cursor: pointer;
 }
 
 .primaryButton:hover:not(:disabled) {
   border-color: var(--accent-hover);
   background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .primaryButton {
+  color: #07111f;
 }
 
 .primaryButton:disabled {
@@ -490,252 +540,159 @@ h2 {
   opacity: 0.58;
 }
 
-.definitionList,
-.resultDetails {
+.resultColumn {
   display: grid;
-  gap: 12px;
-  margin: 0;
+  gap: 16px;
+  align-self: start;
 }
 
-.definitionList div,
-.resultDetails div {
-  display: grid;
-  gap: 4px;
+.resultCard {
+  border-top: 4px solid var(--accent);
 }
 
-dt {
-  color: var(--text-subtle);
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-dd {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.92rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.linkList {
-  display: grid;
-  gap: 8px;
-}
-
-.linkList a {
-  display: flex;
-  min-height: 36px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  color: var(--accent);
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.linkList a:hover {
-  border-color: var(--accent);
-  background: var(--accent-subtle);
-}
-
-.linkList a::after {
-  content: "Abrir";
-  color: var(--text-subtle);
-  font-size: 0.74rem;
-  font-weight: 650;
-}
-
-.mutedText {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.resultPanel {
-  position: sticky;
-  top: 18px;
-}
-
-.modelBadge {
+.riskBadge {
   display: inline-flex;
   min-height: 28px;
   align-items: center;
   padding: 0 10px;
-  color: var(--accent);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--neutral-subtle);
   border: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.risk-low {
+  color: var(--success);
+  background: var(--success-subtle);
+  border-color: color-mix(in srgb, var(--success) 40%, transparent);
+}
+
+.risk-medium {
+  color: #795600;
+  background: var(--warning-subtle);
+  border-color: color-mix(in srgb, var(--warning) 48%, transparent);
+}
+
+[data-theme="dark"] .risk-medium {
+  color: var(--warning);
+}
+
+.risk-high {
+  color: var(--danger);
+  background: var(--danger-subtle);
+  border-color: color-mix(in srgb, var(--danger) 42%, transparent);
 }
 
 .emptyResult {
   display: grid;
   gap: 8px;
-  margin: 18px 18px 0;
-  padding: 20px;
-  border: 1px dashed var(--border-strong);
-  background: var(--surface-alt);
+  margin: 18px;
+  padding: 22px;
+  color: var(--text);
+  background: var(--surface-muted);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
 }
 
 .emptyResult strong {
-  color: var(--text);
-  font-size: 1rem;
+  font-size: 1.08rem;
+  line-height: 1.25;
 }
 
 .emptyResult p {
   margin: 0;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
-.resultStack {
+.resultHero {
   display: grid;
-  gap: 14px;
-  padding: 18px 18px 0;
+  gap: 10px;
+  padding: 22px;
 }
 
-.outcomeBox,
-.riskScale,
-.probabilityPanel,
-.inputSnapshot,
-.academicNotice {
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.outcomeBox {
-  display: grid;
-  gap: 8px;
-  padding: 16px;
-  border-left-width: 4px;
-}
-
-.outcomeBox span,
-.metricHeader span,
-.riskScaleHeader span {
+.resultHero > span {
   color: var(--text-subtle);
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.resultHero > strong {
+  color: var(--text);
+  font-size: clamp(1.55rem, 2.4vw, 2.2rem);
+  line-height: 1.1;
+  font-weight: 780;
+}
+
+.resultHero > p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.resultMeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.resultMeta div {
+  min-width: 0;
+  padding: 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+dt {
+  color: var(--text-subtle);
+  font-size: 0.7rem;
+  font-weight: 780;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
-.outcomeBox strong {
-  color: var(--text);
-  font-size: 1.22rem;
-  line-height: 1.25;
-}
-
-.outcomeBox p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-.risk-low {
-  border-left-color: var(--success);
-  background: var(--success-subtle);
-}
-
-.risk-medium {
-  border-left-color: var(--warning);
-  background: var(--warning-subtle);
-}
-
-.risk-high {
-  border-left-color: var(--danger);
-  background: var(--danger-subtle);
-}
-
-.riskScale,
-.probabilityPanel,
-.inputSnapshot {
-  padding: 16px;
-}
-
-.riskScaleHeader,
-.metricHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.riskScaleHeader strong,
-.metricHeader strong {
+dd {
+  margin: 5px 0 0;
   color: var(--text);
   font-size: 0.88rem;
-}
-
-.riskSegments {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.riskSegments span {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
-  font-size: 0.8rem;
-  font-weight: 750;
-}
-
-.riskSegments .active {
-  color: #ffffff;
-}
-
-.riskSegments .segment-low {
-  border-color: var(--success);
-  background: var(--success);
-}
-
-.riskSegments .segment-medium {
-  color: #161616;
-  border-color: var(--warning);
-  background: var(--warning);
-}
-
-.riskSegments .segment-high {
-  border-color: var(--danger);
-  background: var(--danger);
+  font-weight: 720;
+  overflow-wrap: anywhere;
 }
 
 .probabilityBars,
 .snapshotRows {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  padding: 18px 20px 20px;
 }
 
 .probabilityBars > div,
 .snapshotRows > div {
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr) 56px;
+  grid-template-columns: 122px minmax(0, 1fr) 62px;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .probabilityBars span,
 .snapshotRows span {
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 690;
 }
 
 .probabilityBars b,
 .snapshotRows b {
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   text-align: right;
   white-space: nowrap;
 }
@@ -743,17 +700,20 @@ dd {
 .barTrack {
   height: 10px;
   overflow: hidden;
-  background: var(--bg-subtle);
+  background: var(--surface-strong);
+  border-radius: 999px;
 }
 
 .barTrack i {
   display: block;
   height: 100%;
-  background: var(--chart-blue);
+  min-width: 0;
+  background: var(--accent);
+  border-radius: inherit;
 }
 
 .barTrack.secondary i {
-  background: var(--chart-green);
+  background: var(--success);
 }
 
 .compactBar {
@@ -761,60 +721,146 @@ dd {
 }
 
 .compactBar i {
-  background: var(--chart-neutral);
+  background: var(--neutral);
 }
 
-.resultDetails {
-  grid-template-columns: 1fr;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--border);
+.riskScale {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin: 0 20px 20px;
 }
 
-.academicNotice {
-  margin: 16px 18px 18px;
-  padding: 13px 14px;
-  color: var(--warning);
-  border-color: var(--warning);
-  background: var(--warning-subtle);
-  font-size: 0.86rem;
+.riskScale span {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  font-size: 0.8rem;
+  font-weight: 740;
+}
+
+.riskScale .active {
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.riskScale .segment-low {
+  background: var(--success);
+}
+
+.riskScale .segment-medium {
+  color: #1b1b1b;
+  background: var(--warning);
+}
+
+.riskScale .segment-high {
+  background: var(--danger);
+}
+
+.mutedCardText {
+  margin: 0;
+  padding: 20px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.appFooter {
+  width: min(1440px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 0 0 30px;
+}
+
+.appFooter p {
+  margin: 0;
+  padding: 16px 18px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  font-size: 0.9rem;
   line-height: 1.5;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1240px) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboardGrid {
     grid-template-columns: 1fr;
   }
 
-  .resultPanel {
-    position: static;
+  .resultColumn {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .resultCard {
+    grid-column: 1 / -1;
   }
 }
 
-@media (max-width: 860px) {
-  .topBar {
+@media (max-width: 920px) {
+  .masthead {
+    position: static;
     align-items: flex-start;
     flex-direction: column;
-    padding: 16px;
+    padding: 16px 20px;
   }
 
-  .headerControls {
-    width: 100%;
-    align-items: flex-start;
+  .mastheadActions {
     justify-content: flex-start;
   }
 
-  .dashboardGrid {
-    width: min(100% - 28px, 1440px);
-  }
-
-  .panelHeader,
-  .formActions {
-    align-items: flex-start;
-    flex-direction: column;
+  .dashboardPage,
+  .appFooter {
+    width: min(100% - 32px, 760px);
   }
 
   .fieldGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .summaryGrid,
+  .resultColumn,
+  .fieldGrid {
     grid-template-columns: 1fr;
+  }
+
+  .technicalLinks {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 8px;
+  }
+
+  .technicalLinks a {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .cardHeader,
+  .formActions,
+  .resultMeta {
+    grid-template-columns: 1fr;
+  }
+
+  .cardHeader,
+  .formActions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cardHeader > p {
+    max-width: none;
+    text-align: left;
   }
 
   .probabilityBars > div,
