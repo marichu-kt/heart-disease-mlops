@@ -79,7 +79,10 @@ def test_metrics_endpoint():
     assert "text/plain" in response.headers["content-type"]
     assert "heart_predictions_total" in response.text
     assert "api_requests_total" in response.text
+    assert "api_request_duration_seconds" in response.text
+    assert "api_request_errors_total" in response.text
     assert "heart_prediction_duration_seconds" in response.text
+    assert "heart_prediction_errors_total" in response.text
     assert "heart_predictions_by_class_total" in response.text
     assert "heart_model_info" in response.text
     assert "heart_api_up" in response.text

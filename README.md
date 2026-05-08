@@ -27,7 +27,7 @@ Servicios principales:
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3001 |
 
-## Demo Rápida
+## Demo Rápida Profesional
 
 1. Levanta todos los servicios:
 
@@ -40,11 +40,14 @@ docker compose up --build
 4. Genera tráfico adicional para métricas:
 
 ```bash
-python scripts/demo_requests.py --requests 25
+python scripts/demo_requests.py --requests 25 --sleep 0.05
 ```
 
-5. Revisa Prometheus en http://localhost:9090.
-6. Revisa Grafana en http://localhost:3001.
+5. Abre Swagger en http://localhost:8000/docs y prueba `POST /predict`.
+6. Revisa Prometheus en http://localhost:9090/targets y confirma que `heart-api` está `UP`.
+7. Abre Grafana en http://localhost:3001/login y entra al dashboard `Heart Disease MLOps Observability`.
+
+Guía completa: [`docs/demo-guide.md`](docs/demo-guide.md).
 
 ## 2. Objetivo
 
@@ -191,7 +194,10 @@ heart-disease-mlops/
 │   └── test_api.py
 ├── docs/
 │   ├── images/
+│   ├── demo-guide.md
+│   ├── grafana-guide.md
 │   ├── model-card.md
+│   ├── prometheus-queries.md
 │   └── taller-base.md
 ├── .github/
 │   └── workflows/ci.yml
@@ -319,6 +325,23 @@ La documentación detallada del modelo está en [`docs/model-card.md`](docs/mode
 ## 14. API FastAPI
 
 La API carga el modelo al arrancar y expone predicciones individuales, batch, estado, información del modelo y métricas Prometheus.
+
+Swagger está disponible en:
+
+```text
+http://localhost:8000/docs
+```
+
+La documentación OpenAPI está organizada por tags:
+
+| Tag | Qué Incluye |
+|---|---|
+| `System` | `/health` y `/version`, para revisar disponibilidad y versión. |
+| `Model` | `/info`, con metadata del modelo cargado. |
+| `Prediction` | `/predict` y `/predict/batch`, con ejemplos de entrada y respuesta. |
+| `Monitoring` | `/metrics`, pensado para scraping Prometheus. |
+
+Para una demo, lo más útil es abrir Swagger, ejecutar `GET /health`, revisar `GET /info` y probar `POST /predict` con el ejemplo precargado del schema.
 
 ### Endpoints
 
@@ -454,6 +477,18 @@ Prometheus se configura en `monitoring/prometheus.yml` y recoge métricas desde:
 http://api:8000/metrics
 ```
 
+El job se llama `heart-api`, usa `scrape_interval: 10s` y apunta al target Docker `api:8000`.
+
+### Cómo Leer `/metrics`
+
+El endpoint http://localhost:8000/metrics devuelve texto plano en formato Prometheus. No está pensado como dashboard visual para humanos: su función es que Prometheus lo scrapee periódicamente y almacene series temporales.
+
+Para verlo:
+
+```bash
+curl -fsS http://localhost:8000/metrics
+```
+
 Métricas principales:
 
 | Métrica | Descripción |
@@ -468,12 +503,53 @@ Métricas principales:
 | `heart_model_info` | Metadata del modelo cargado. |
 | `heart_api_up` | Estado de salud de la API. |
 
+### Cómo Ver Métricas En Prometheus
+
+1. Levanta la pila:
+
+```bash
+docker compose up --build
+```
+
+2. Genera tráfico real:
+
+```bash
+python scripts/demo_requests.py --requests 25 --sleep 0.05
+```
+
+3. Abre targets:
+
+```text
+http://localhost:9090/targets
+```
+
+4. Comprueba que `heart-api` está `UP`.
+5. Abre el explorador:
+
+```text
+http://localhost:9090/graph
+```
+
+Queries útiles:
+
+| Query | Significado |
+|---|---|
+| `heart_api_up` | Estado de la API: `1` operativa, `0` no disponible. |
+| `rate(api_requests_total[5m])` | Tasa de requests por segundo en los últimos 5 minutos. |
+| `heart_predictions_total` | Total acumulado de predicciones por endpoint. |
+| `sum by (label) (heart_predictions_by_class_total)` | Distribución de predicciones por clase. |
+| `histogram_quantile(0.95, sum(rate(heart_prediction_duration_seconds_bucket[5m])) by (le, endpoint))` | Percentil 95 de latencia de inferencia. |
+| `sum by (endpoint) (rate(api_request_duration_seconds_sum[5m])) / sum by (endpoint) (rate(api_request_duration_seconds_count[5m]))` | Latencia HTTP media por endpoint. |
+| `api_request_errors_total` | Errores HTTP 5xx acumulados. |
+
+Guía ampliada: [`docs/prometheus-queries.md`](docs/prometheus-queries.md).
+
 ## 17. Grafana
 
 Grafana se levanta en:
 
 ```text
-http://localhost:3001
+http://localhost:3001/login
 ```
 
 Credenciales por defecto:
@@ -491,14 +567,32 @@ El dashboard se provisiona automáticamente desde:
 monitoring/grafana-dashboard.json
 ```
 
-Paneles incluidos:
+Nombre del dashboard:
 
-- Total de predicciones.
-- Requests por endpoint.
-- Errores acumulados.
-- Estado de la API.
-- Latencia p95 de inferencia.
-- Predicciones por clase y nivel de riesgo.
+```text
+Heart Disease MLOps Observability
+```
+
+Paneles incluidos y organizados por filas:
+
+| Fila | Paneles |
+|---|---|
+| Overview | API status, Total predictions, Request rate, Errors |
+| Predictions | Predictions by class, Predictions by risk level |
+| Latency | Prediction latency p95, HTTP latency average |
+| Errors | API errors by endpoint, Prediction errors by endpoint |
+| Model | Model info |
+
+Pasos recomendados:
+
+1. Levanta Docker Compose.
+2. Genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05`.
+3. Entra en Grafana con las credenciales de demo local.
+4. Abre la carpeta `MLOps`.
+5. Abre `Heart Disease MLOps Observability`.
+6. Comprueba que el rango temporal está en `Last 1 hour` y el refresh en `10s`.
+
+Guía ampliada: [`docs/grafana-guide.md`](docs/grafana-guide.md).
 
 ## 18. Cómo Ejecutar El Proyecto
 
@@ -581,30 +675,40 @@ GitHub Actions ejecuta estos tests automáticamente en Pull Requests y pushes a 
 
 ## 21. Capturas Del Proyecto
 
-La estructura está preparada en `docs/images/`. No se incluyen capturas falsas. Si las imágenes no aparecen todavía, ejecútalo con Docker Compose y añade capturas reales en estas rutas:
+Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: deben generarse con la aplicación real levantada mediante Docker Compose.
 
 | Captura | Ruta |
 |---|---|
-| Frontend | `docs/images/frontend.png` |
+| Frontend modo claro | `docs/images/frontend-light.png` |
+| Frontend modo oscuro | `docs/images/frontend-dark.png` |
 | Swagger | `docs/images/swagger.png` |
-| Prometheus | `docs/images/prometheus.png` |
-| Grafana | `docs/images/grafana.png` |
+| Prometheus targets | `docs/images/prometheus-targets.png` |
+| Prometheus graph | `docs/images/prometheus-graph.png` |
+| Grafana dashboard | `docs/images/grafana-dashboard.png` |
 
-### Frontend
+### Frontend Claro
 
-![Frontend](docs/images/frontend.png)
+![Frontend claro](docs/images/frontend-light.png)
+
+### Frontend Oscuro
+
+![Frontend oscuro](docs/images/frontend-dark.png)
 
 ### Swagger
 
 ![Swagger](docs/images/swagger.png)
 
-### Prometheus
+### Prometheus Targets
 
-![Prometheus](docs/images/prometheus.png)
+![Prometheus targets](docs/images/prometheus-targets.png)
+
+### Prometheus Graph
+
+![Prometheus graph](docs/images/prometheus-graph.png)
 
 ### Grafana
 
-![Grafana](docs/images/grafana.png)
+![Grafana dashboard](docs/images/grafana-dashboard.png)
 
 ## 22. Posibles Problemas Y Soluciones
 
@@ -636,7 +740,7 @@ Antes de hacer público el repositorio, revisa:
 - Persistir métricas y logs con almacenamiento externo.
 - Añadir autenticación para el frontend y la API.
 - Comparar varias familias de modelos antes de publicar una versión.
-- Añadir capturas reales en `docs/images/` tras una demo.
+- Añadir alertas en Grafana para estado API, errores y latencia p95.
 
 ## 24. Conclusión
 

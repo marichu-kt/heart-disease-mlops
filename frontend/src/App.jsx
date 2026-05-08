@@ -304,8 +304,7 @@ function App() {
     }));
   }
 
-  async function submitPrediction(event) {
-    event.preventDefault();
+  async function runPrediction() {
     setError("");
 
     if (!requiredFieldsOk) {
@@ -334,6 +333,11 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function submitPrediction(event) {
+    event.preventDefault();
+    await runPrediction();
   }
 
   const apiOnline = status?.status === "healthy";
@@ -478,14 +482,23 @@ function App() {
               </div>
 
               {!result && !loading && (
-                <div className="emptyResult">
+                <div className="emptyResult" role="status">
+                  <span className="emptyStateIcon" aria-hidden="true">
+                    i
+                  </span>
                   <strong>Sin evaluación todavía</strong>
                   <p>Completa el formulario y ejecuta una predicción para ver el resultado del modelo.</p>
+                  <button className="secondaryButton" type="button" onClick={runPrediction} disabled={!requiredFieldsOk}>
+                    Evaluar riesgo
+                  </button>
                 </div>
               )}
 
               {loading && (
-                <div className="emptyResult">
+                <div className="emptyResult" role="status">
+                  <span className="emptyStateIcon loadingDot" aria-hidden="true">
+                    ...
+                  </span>
                   <strong>Evaluando caso</strong>
                   <p>La API está procesando la entrada y registrando métricas operativas.</p>
                 </div>
