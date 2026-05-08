@@ -73,9 +73,9 @@ const formSections = [
         label: "ECG en reposo",
         type: "select",
         options: [
-          { value: 0, label: "0 · Normal" },
-          { value: 1, label: "1 · Alteración ST-T" },
-          { value: 2, label: "2 · Hipertrofia ventricular" }
+          { value: 0, label: "0: Normal" },
+          { value: 1, label: "1: Anomalía ST-T" },
+          { value: 2, label: "2: Hipertrofia ventricular probable" }
         ]
       },
       {
@@ -98,10 +98,10 @@ const formSections = [
         label: "Tipo de dolor torácico",
         type: "select",
         options: [
-          { value: 1, label: "1 · Angina típica" },
-          { value: 2, label: "2 · Angina atípica" },
-          { value: 3, label: "3 · Dolor no anginoso" },
-          { value: 4, label: "4 · Asintomático" }
+          { value: 1, label: "1: Angina típica" },
+          { value: 2, label: "2: Angina atípica" },
+          { value: 3, label: "3: Dolor no anginoso" },
+          { value: 4, label: "4: Asintomático" }
         ]
       },
       {
@@ -119,9 +119,9 @@ const formSections = [
         label: "Pendiente del segmento ST",
         type: "select",
         options: [
-          { value: 1, label: "1 · Ascendente" },
-          { value: 2, label: "2 · Plana" },
-          { value: 3, label: "3 · Descendente" }
+          { value: 1, label: "1: Ascendente" },
+          { value: 2, label: "2: Plana" },
+          { value: 3, label: "3: Descendente" }
         ]
       }
     ]
@@ -146,9 +146,9 @@ const formSections = [
         label: "Thal",
         type: "select",
         options: [
-          { value: 3, label: "3 · Normal" },
-          { value: 6, label: "6 · Defecto fijo" },
-          { value: 7, label: "7 · Defecto reversible" }
+          { value: 3, label: "3: Normal" },
+          { value: 6, label: "6: Defecto fijo" },
+          { value: 7, label: "7: Defecto reversible" }
         ]
       }
     ]
@@ -163,6 +163,15 @@ const inputSummary = [
   { name: "maximum_heart_rate_achieved", label: "Frecuencia máxima", min: 60, max: 230, unit: "lpm" },
   { name: "oldpeak", label: "Depresión ST", min: 0, max: 10, unit: "" }
 ];
+
+function getInitialTheme() {
+  if (typeof window === "undefined") return "light";
+
+  const storedTheme = window.localStorage.getItem("heart-ui-theme");
+  if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 function apiStatusLabel(status) {
   if (!status) return "Comprobando";
@@ -184,6 +193,11 @@ function predictionText(label) {
 function formatPercent(value) {
   if (value == null || Number.isNaN(Number(value))) return "No disponible";
   return `${Math.round(Number(value) * 100)}%`;
+}
+
+function percentValue(value) {
+  if (value == null || Number.isNaN(Number(value))) return 0;
+  return Math.round(Number(value) * 100);
 }
 
 function clamp(value, min, max) {
@@ -242,6 +256,7 @@ function FieldControl({ field, value, onChange }) {
 }
 
 function App() {
+  const [theme, setTheme] = useState(getInitialTheme);
   const [patient, setPatient] = useState(initialPatient);
   const [result, setResult] = useState(null);
   const [lastPredictionAt, setLastPredictionAt] = useState(null);
@@ -261,6 +276,11 @@ function App() {
     const noDisease = result?.probabilities?.no_disease ?? (disease != null ? 1 - disease : null);
     return { disease, noDisease };
   }, [result]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("heart-ui-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     async function loadApiInfo() {
@@ -323,6 +343,10 @@ function App() {
   const apiOnline = status?.status === "healthy";
   const activeModelVersion = versionInfo?.model_version || modelInfo?.version || status?.model_version || "No disponible";
   const activeModelName = versionInfo?.model_name || modelInfo?.model_name || "heart_disease_mlp";
+  const activeAlgorithm = modelInfo?.algorithm || "StandardScaler + MLPClassifier";
+  const diseasePercent = percentValue(probabilities.disease);
+  const noDiseasePercent = percentValue(probabilities.noDisease);
+  const nextTheme = theme === "dark" ? "light" : "dark";
   const lastPredictionText = lastPredictionAt
     ? lastPredictionAt.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "medium" })
     : "Sin predicciones";
@@ -330,90 +354,57 @@ function App() {
   return (
     <main className="appShell">
       <header className="topBar">
-        <div>
-          <p className="productLabel">Heart Disease MLOps</p>
-          <h1>Panel de evaluación de riesgo cardíaco</h1>
+        <div className="brandBlock">
+          <div className="brandMark" aria-hidden="true">
+            HD
+          </div>
+          <div>
+            <p className="productLabel">Heart Disease MLOps</p>
+            <h1>Evaluación de riesgo cardíaco</h1>
+          </div>
         </div>
-        <div className="headerStatus" aria-label="Estado resumido del sistema">
-          <span className={apiOnline ? "statusDot statusDotOk" : "statusDot statusDotWarn"} />
-          <span>API {apiStatusLabel(status)}</span>
-          <span>Modelo {activeModelVersion}</span>
-          <span>{modelInfo?.algorithm || "StandardScaler + MLPClassifier"}</span>
+        <div className="headerControls" aria-label="Controles y estado del sistema">
+          <div className="headerStatus" aria-label="Estado resumido del sistema">
+            <span className={apiOnline ? "statusDot statusDotOk" : "statusDot statusDotWarn"} />
+            <span>API {apiStatusLabel(status)}</span>
+            <span>Modelo {activeModelVersion}</span>
+            <span>{activeAlgorithm}</span>
+          </div>
+          <nav className="topLinks" aria-label="Accesos técnicos principales">
+            <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
+              Swagger
+            </a>
+            <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer">
+              Metrics
+            </a>
+            <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
+              Grafana
+            </a>
+          </nav>
+          <button
+            className="themeToggle"
+            type="button"
+            aria-label={`Cambiar a modo ${nextTheme === "dark" ? "oscuro" : "claro"}`}
+            aria-pressed={theme === "dark"}
+            onClick={() => setTheme(nextTheme)}
+          >
+            <span aria-hidden="true" />
+            {theme === "dark" ? "Modo oscuro" : "Modo claro"}
+          </button>
         </div>
       </header>
 
-      <section className="layoutGrid">
-        <aside className="sidePanel" aria-label="Resumen operativo">
-          <section className="sideSection">
-            <h2>Estado del servicio</h2>
-            <dl className="definitionList">
-              <div>
-                <dt>API</dt>
-                <dd>{apiStatusLabel(status)}</dd>
-              </div>
-              <div>
-                <dt>Modelo cargado</dt>
-                <dd>{status?.model_loaded ? "Sí" : "No"}</dd>
-              </div>
-              <div>
-                <dt>Entorno</dt>
-                <dd>{versionInfo?.environment || "local"}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="sideSection">
-            <h2>Modelo activo</h2>
-            <dl className="definitionList">
-              <div>
-                <dt>Nombre</dt>
-                <dd>{activeModelName}</dd>
-              </div>
-              <div>
-                <dt>Versión</dt>
-                <dd>{activeModelVersion}</dd>
-              </div>
-              <div>
-                <dt>Exactitud</dt>
-                <dd>{modelInfo?.accuracy != null ? formatPercent(modelInfo.accuracy) : "No disponible"}</dd>
-              </div>
-            </dl>
-          </section>
-
-          <section className="sideSection">
-            <h2>Accesos técnicos</h2>
-            <nav className="linkList" aria-label="Accesos técnicos">
-              <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
-                Swagger
-              </a>
-              <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer">
-                Métricas API
-              </a>
-              <a href={PROMETHEUS_URL} target="_blank" rel="noreferrer">
-                Prometheus
-              </a>
-              <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
-                Grafana
-              </a>
-            </nav>
-          </section>
-
-          <section className="sideSection">
-            <h2>Última inferencia</h2>
-            <p className="mutedText">{lastPredictionText}</p>
-          </section>
-        </aside>
-
-        <section className="workArea">
-          <form className="clinicalPanel" onSubmit={submitPrediction}>
-            <div className="panelHeader">
-              <div>
-                <p className="sectionKicker">Datos de entrada</p>
-                <h2>Formulario clínico</h2>
-              </div>
-              <p>Los campos mantienen la codificación del dataset original para que la inferencia sea reproducible.</p>
+      <section className="dashboardGrid">
+        <section className="clinicalPanel" aria-labelledby="clinical-form-title">
+          <div className="panelHeader">
+            <div>
+              <p className="sectionKicker">Datos clínicos de entrada</p>
+              <h2 id="clinical-form-title">Formulario de evaluación</h2>
             </div>
+            <p>Los campos mantienen la codificación esperada por la API para que la inferencia sea reproducible.</p>
+          </div>
 
+          <form className="clinicalForm" onSubmit={submitPrediction}>
             {formSections.map((section) => (
               <fieldset className="formSection" key={section.title}>
                 <legend>
@@ -446,8 +437,74 @@ function App() {
               <span>{requiredFieldsOk ? "Formulario listo para inferencia" : "Hay valores fuera de rango"}</span>
             </div>
           </form>
+        </section>
 
-          <aside className="resultPanel" aria-label="Resultado del modelo">
+        <aside className="insightsColumn" aria-label="Estado del sistema y resultado del modelo">
+          <section className="systemPanel">
+            <div className="panelHeader compact">
+              <div>
+                <p className="sectionKicker">Estado del servicio</p>
+                <h2>Resumen operativo</h2>
+              </div>
+            </div>
+            <dl className="definitionList">
+              <div>
+                <dt>API</dt>
+                <dd>{apiStatusLabel(status)}</dd>
+              </div>
+              <div>
+                <dt>Modelo cargado</dt>
+                <dd>{status?.model_loaded ? "Sí" : "No"}</dd>
+              </div>
+              <div>
+                <dt>Entorno</dt>
+                <dd>{versionInfo?.environment || "local"}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="systemPanel">
+            <h2>Modelo activo</h2>
+            <dl className="definitionList">
+              <div>
+                <dt>Nombre</dt>
+                <dd>{activeModelName}</dd>
+              </div>
+              <div>
+                <dt>Versión</dt>
+                <dd>{activeModelVersion}</dd>
+              </div>
+              <div>
+                <dt>Exactitud</dt>
+                <dd>{modelInfo?.accuracy != null ? formatPercent(modelInfo.accuracy) : "No disponible"}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section className="systemPanel">
+            <h2>Accesos técnicos</h2>
+            <nav className="linkList" aria-label="Accesos técnicos">
+              <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer">
+                Swagger
+              </a>
+              <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer">
+                Métricas API
+              </a>
+              <a href={PROMETHEUS_URL} target="_blank" rel="noreferrer">
+                Prometheus
+              </a>
+              <a href={GRAFANA_URL} target="_blank" rel="noreferrer">
+                Grafana
+              </a>
+            </nav>
+          </section>
+
+          <section className="systemPanel">
+            <h2>Última inferencia</h2>
+            <p className="mutedText">{lastPredictionText}</p>
+          </section>
+
+          <section className="resultPanel" aria-label="Resultado del modelo">
             <div className="panelHeader compact">
               <div>
                 <p className="sectionKicker">Resultado del modelo</p>
@@ -502,18 +559,18 @@ function App() {
                   </div>
                   <div className="probabilityBars">
                     <div>
-                      <span>Disease</span>
+                      <span>Enfermedad</span>
                       <div className="barTrack">
-                        <i style={{ width: `${rangePosition(probabilities.disease ?? 0, 0, 1)}%` }} />
+                        <i style={{ width: `${diseasePercent}%` }} />
                       </div>
-                      <b>{formatPercent(probabilities.disease)}</b>
+                      <b>{diseasePercent}%</b>
                     </div>
                     <div>
-                      <span>No Disease</span>
+                      <span>Sin enfermedad</span>
                       <div className="barTrack secondary">
-                        <i style={{ width: `${rangePosition(probabilities.noDisease ?? 0, 0, 1)}%` }} />
+                        <i style={{ width: `${noDiseasePercent}%` }} />
                       </div>
-                      <b>{formatPercent(probabilities.noDisease)}</b>
+                      <b>{noDiseasePercent}%</b>
                     </div>
                   </div>
                 </section>
@@ -558,8 +615,8 @@ function App() {
             <p className="academicNotice">
               Resultado orientativo para uso académico. No sustituye una valoración médica profesional.
             </p>
-          </aside>
-        </section>
+          </section>
+        </aside>
       </section>
     </main>
   );
