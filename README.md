@@ -395,8 +395,8 @@ VITE_API_URL=http://localhost:8000
 Incluye:
 
 - Interfaz tipo dashboard clínico/técnico, sobria y orientada a producto.
-- Cabecera compacta con estado de API, modelo activo y algoritmo.
-- Panel lateral con estado del servicio, metadata del modelo y accesos técnicos.
+- Cabecera compacta con estado de API, modelo activo, algoritmo, accesos técnicos y selector de tema.
+- Columna de estado con servicio, metadata del modelo, última inferencia y accesos técnicos.
 - Formulario con las 13 variables clínicas agrupadas por secciones.
 - Selects para variables categóricas como sexo, dolor torácico, glucosa, angina, pendiente ST y thal.
 - Validación básica por rango.
@@ -404,19 +404,23 @@ Incluye:
 - Visualización de probabilidades `Disease` / `No Disease`.
 - Indicador de riesgo bajo, medio o alto.
 - Resumen visual de los valores de entrada principales.
+- Modo claro/oscuro con preferencia guardada en `localStorage`.
 - Manejo visual de errores.
 - Diseño responsive.
 
 ## Diseño De Interfaz
 
-El rediseño evita la estética de landing page genérica. La pantalla se plantea como una herramienta interna de análisis de riesgo:
+El rediseño evita la estética de landing page genérica. La pantalla se plantea como una herramienta interna de análisis de riesgo inspirada en criterios visuales de IBM Carbon Design System y PatternFly:
 
-- fondo claro y neutro;
-- paneles con bordes discretos y sombras mínimas;
-- jerarquía visual compacta;
-- textos funcionales, sin claims comerciales;
-- agrupación clínica de campos;
-- visualizaciones útiles basadas en la respuesta real de la API y en los valores introducidos por el usuario.
+- estructura de dashboard profesional, no página promocional;
+- fondo gris claro en modo claro y fondo oscuro sobrio en modo oscuro;
+- superficies limpias, bordes finos, sombras mínimas y jerarquía compacta;
+- formulario clínico agrupado por secciones y campos categóricos con `select`;
+- cards funcionales para estado del servicio, modelo activo, resultado e inferencia;
+- visualizaciones basadas únicamente en datos reales del formulario, metadata del modelo y respuesta de la API;
+- toggle accesible de modo claro/oscuro con `aria-label`, foco visible y estado `aria-pressed`;
+- preferencia de tema guardada en `localStorage` y uso de `prefers-color-scheme: dark` cuando no hay preferencia previa;
+- textos funcionales, sin claims comerciales ni lenguaje alarmista.
 
 ## Script De Demo Para Métricas
 
