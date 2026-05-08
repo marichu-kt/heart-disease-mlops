@@ -1,8 +1,13 @@
-# Capturas Del Proyecto
+# Imágenes Del Proyecto
 
-Esta carpeta contiene o espera capturas reales generadas desde la aplicación ejecutándose con Docker Compose.
+Esta carpeta contiene la identidad visual, capturas reales y recursos de documentación del proyecto.
 
-Rutas esperadas:
+Identidad visual:
+
+- `logo-icon.png`: icono del proyecto, usado también como favicon del frontend.
+- `logo-full.png`: logo completo con nombre, usado en el README.
+
+Capturas y recursos técnicos:
 
 - `frontend-light.png`
 - `frontend-dark.png`
