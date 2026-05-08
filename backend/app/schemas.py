@@ -116,6 +116,10 @@ class PredictionResponse(BaseModel):
         None,
         description="Distribución de probabilidad por clase cuando el modelo la ofrece.",
     )
+    decision_threshold: Optional[float] = Field(
+        None,
+        description="Umbral de decisión usado para convertir la probabilidad de Disease en clase final.",
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -124,12 +128,13 @@ class PredictionResponse(BaseModel):
                 "label": "Disease",
                 "probability": 0.82,
                 "risk_level": "High",
-                "model_version": "v3.0.0",
+                "model_version": "v4.0.0",
                 "inference_time_ms": 4.7,
                 "probabilities": {
                     "no_disease": 0.18,
                     "disease": 0.82,
                 },
+                "decision_threshold": 0.35,
             }
         }
     }
@@ -177,6 +182,7 @@ class ModelInfoResponse(BaseModel):
     f1_score: Optional[float] = Field(None, description="F1-score registrado durante la evaluación del modelo.")
     roc_auc: Optional[float] = Field(None, description="ROC-AUC registrado cuando el modelo permite estimarlo.")
     selected_metric: Optional[str] = Field(None, description="Métrica principal usada para seleccionar el modelo activo.")
+    decision_threshold: Optional[float] = Field(None, description="Umbral de decisión usado por el modelo activo.")
     created_at: Optional[str] = Field(None, description="Fecha de creación del artefacto, si está disponible.")
     input_features: List[str] = Field(..., description="Variables de entrada esperadas por el modelo.")
     model_path: str = Field(..., description="Ruta del artefacto joblib cargado.")

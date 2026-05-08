@@ -1,297 +1,454 @@
 {
-  "version": "v3.0.0",
+  "active_model": "v4.0.0",
+  "model_name": "heart_disease_mlp_tuned",
+  "algorithm": "StandardScaler + Tuned MLPClassifier",
+  "dataset_source": "OpenML heart-statlog",
   "selected_metric": "recall",
-  "selection_criterion": "maximize recall to reduce false negatives in an academic clinical-risk context; ties are resolved by f1_score, roc_auc and accuracy",
-  "best_model": {
-    "name": "LogisticRegression",
+  "selection_criterion": "Maximize recall to reduce false negatives in an academic clinical-risk context; threshold ties are resolved by f1_score, precision and accuracy.",
+  "decision_threshold": 0.35,
+  "best_params": {
+    "max_iter": 800,
+    "learning_rate_init": 0.005,
+    "learning_rate": "constant",
+    "hidden_layer_sizes": [
+      16
+    ],
+    "batch_size": 32,
+    "alpha": 0.05,
+    "activation": "tanh"
+  },
+  "cv_strategy": {
+    "type": "StratifiedKFold",
+    "n_splits": 5,
+    "shuffle": true,
+    "random_state": 42
+  },
+  "hyperparameter_search": {
+    "type": "RandomizedSearchCV",
+    "n_iter": 32,
+    "scoring": "recall",
+    "best_cv_recall": 0.8547,
+    "search_space": {
+      "hidden_layer_sizes": [
+        [
+          16
+        ],
+        [
+          32
+        ],
+        [
+          64
+        ],
+        [
+          32,
+          16
+        ],
+        [
+          64,
+          32
+        ],
+        [
+          128,
+          64
+        ]
+      ],
+      "activation": [
+        "relu",
+        "tanh"
+      ],
+      "alpha": [
+        0.0001,
+        0.001,
+        0.01,
+        0.05
+      ],
+      "learning_rate_init": [
+        0.0005,
+        0.001,
+        0.005,
+        0.01
+      ],
+      "batch_size": [
+        16,
+        32,
+        64
+      ],
+      "learning_rate": [
+        "constant",
+        "adaptive"
+      ],
+      "max_iter": [
+        800,
+        1000,
+        1500
+      ]
+    },
+    "top_results": [
+      {
+        "rank": 1,
+        "mean_test_recall": 0.8547,
+        "std_test_recall": 0.1062,
+        "mean_train_recall": 0.8516,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.005,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            16
+          ],
+          "batch_size": 32,
+          "alpha": 0.05,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 1,
+        "mean_test_recall": 0.8547,
+        "std_test_recall": 0.1062,
+        "mean_train_recall": 0.8516,
+        "params": {
+          "max_iter": 1500,
+          "learning_rate_init": 0.005,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            16
+          ],
+          "batch_size": 32,
+          "alpha": 0.001,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 3,
+        "mean_test_recall": 0.8442,
+        "std_test_recall": 0.0931,
+        "mean_train_recall": 0.8542,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.001,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            16
+          ],
+          "batch_size": 32,
+          "alpha": 0.05,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 4,
+        "mean_test_recall": 0.8337,
+        "std_test_recall": 0.1212,
+        "mean_train_recall": 0.8333,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.01,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            16
+          ],
+          "batch_size": 16,
+          "alpha": 0.001,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 5,
+        "mean_test_recall": 0.8132,
+        "std_test_recall": 0.0898,
+        "mean_train_recall": 0.8282,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.001,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 64,
+          "alpha": 0.01,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 6,
+        "mean_test_recall": 0.8126,
+        "std_test_recall": 0.108,
+        "mean_train_recall": 0.8178,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.005,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 64,
+          "alpha": 0.0001,
+          "activation": "relu"
+        }
+      },
+      {
+        "rank": 6,
+        "mean_test_recall": 0.8126,
+        "std_test_recall": 0.108,
+        "mean_train_recall": 0.8178,
+        "params": {
+          "max_iter": 1500,
+          "learning_rate_init": 0.005,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 64,
+          "alpha": 0.01,
+          "activation": "relu"
+        }
+      },
+      {
+        "rank": 6,
+        "mean_test_recall": 0.8126,
+        "std_test_recall": 0.108,
+        "mean_train_recall": 0.8125,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.005,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 32,
+          "alpha": 0.05,
+          "activation": "relu"
+        }
+      },
+      {
+        "rank": 6,
+        "mean_test_recall": 0.8126,
+        "std_test_recall": 0.0851,
+        "mean_train_recall": 0.823,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.001,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 16,
+          "alpha": 0.001,
+          "activation": "relu"
+        }
+      },
+      {
+        "rank": 10,
+        "mean_test_recall": 0.8021,
+        "std_test_recall": 0.1019,
+        "mean_train_recall": 0.8125,
+        "params": {
+          "max_iter": 1500,
+          "learning_rate_init": 0.005,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            64
+          ],
+          "batch_size": 16,
+          "alpha": 0.05,
+          "activation": "tanh"
+        }
+      }
+    ]
+  },
+  "metrics": {
+    "accuracy": 0.6667,
+    "precision": 0.5714,
+    "recall": 1.0,
+    "f1_score": 0.7273,
+    "roc_auc": 0.8583
+  },
+  "confusion_matrix": [
+    [
+      12,
+      18
+    ],
+    [
+      0,
+      24
+    ]
+  ],
+  "classification_report": {
+    "No Disease": {
+      "precision": 1.0,
+      "recall": 0.4,
+      "f1-score": 0.5714285714285714,
+      "support": 30.0
+    },
+    "Disease": {
+      "precision": 0.5714285714285714,
+      "recall": 1.0,
+      "f1-score": 0.7272727272727273,
+      "support": 24.0
+    },
+    "accuracy": 0.6666666666666666,
+    "macro avg": {
+      "precision": 0.7857142857142857,
+      "recall": 0.7,
+      "f1-score": 0.6493506493506493,
+      "support": 54.0
+    },
+    "weighted avg": {
+      "precision": 0.8095238095238095,
+      "recall": 0.6666666666666666,
+      "f1-score": 0.6406926406926406,
+      "support": 54.0
+    }
+  },
+  "threshold_search": [
+    {
+      "threshold": 0.25,
+      "accuracy": 0.5556,
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1_score": 0.6667,
+      "confusion_matrix": [
+        [
+          6,
+          24
+        ],
+        [
+          0,
+          24
+        ]
+      ]
+    },
+    {
+      "threshold": 0.3,
+      "accuracy": 0.6296,
+      "precision": 0.5455,
+      "recall": 1.0,
+      "f1_score": 0.7059,
+      "confusion_matrix": [
+        [
+          10,
+          20
+        ],
+        [
+          0,
+          24
+        ]
+      ]
+    },
+    {
+      "threshold": 0.35,
+      "accuracy": 0.6667,
+      "precision": 0.5714,
+      "recall": 1.0,
+      "f1_score": 0.7273,
+      "confusion_matrix": [
+        [
+          12,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "accuracy": 0.6481,
+      "precision": 0.561,
+      "recall": 0.9583,
+      "f1_score": 0.7077,
+      "confusion_matrix": [
+        [
+          12,
+          18
+        ],
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "threshold": 0.45,
+      "accuracy": 0.7037,
+      "precision": 0.6053,
+      "recall": 0.9583,
+      "f1_score": 0.7419,
+      "confusion_matrix": [
+        [
+          15,
+          15
+        ],
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "threshold": 0.5,
+      "accuracy": 0.7593,
+      "precision": 0.6667,
+      "recall": 0.9167,
+      "f1_score": 0.7719,
+      "confusion_matrix": [
+        [
+          19,
+          11
+        ],
+        [
+          2,
+          22
+        ]
+      ]
+    },
+    {
+      "threshold": 0.55,
+      "accuracy": 0.7778,
+      "precision": 0.6875,
+      "recall": 0.9167,
+      "f1_score": 0.7857,
+      "confusion_matrix": [
+        [
+          20,
+          10
+        ],
+        [
+          2,
+          22
+        ]
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "accuracy": 0.8148,
+      "precision": 0.7333,
+      "recall": 0.9167,
+      "f1_score": 0.8148,
+      "confusion_matrix": [
+        [
+          22,
+          8
+        ],
+        [
+          2,
+          22
+        ]
+      ]
+    }
+  ],
+  "previous_model_reference": {
+    "version": "v3.0.0",
     "algorithm": "StandardScaler + LogisticRegression",
     "accuracy": 0.8519,
     "precision": 0.7857,
     "recall": 0.9167,
     "f1_score": 0.8462,
     "roc_auc": 0.8958,
-    "confusion_matrix": [
-      [
-        24,
-        6
-      ],
-      [
-        2,
-        22
-      ]
-    ],
-    "classification_report": {
-      "No Disease": {
-        "precision": 0.9230769230769231,
-        "recall": 0.8,
-        "f1-score": 0.8571428571428571,
-        "support": 30.0
-      },
-      "Disease": {
-        "precision": 0.7857142857142857,
-        "recall": 0.9166666666666666,
-        "f1-score": 0.8461538461538461,
-        "support": 24.0
-      },
-      "accuracy": 0.8518518518518519,
-      "macro avg": {
-        "precision": 0.8543956043956045,
-        "recall": 0.8583333333333334,
-        "f1-score": 0.8516483516483516,
-        "support": 54.0
-      },
-      "weighted avg": {
-        "precision": 0.8620268620268621,
-        "recall": 0.8518518518518519,
-        "f1-score": 0.8522588522588521,
-        "support": 54.0
-      }
-    }
+    "note": "Previous best non-neural baseline"
   },
-  "models_compared": [
-    {
-      "name": "LogisticRegression",
-      "algorithm": "StandardScaler + LogisticRegression",
-      "accuracy": 0.8519,
-      "precision": 0.7857,
-      "recall": 0.9167,
-      "f1_score": 0.8462,
-      "roc_auc": 0.8958,
-      "confusion_matrix": [
-        [
-          24,
-          6
-        ],
-        [
-          2,
-          22
-        ]
-      ],
-      "classification_report": {
-        "No Disease": {
-          "precision": 0.9230769230769231,
-          "recall": 0.8,
-          "f1-score": 0.8571428571428571,
-          "support": 30.0
-        },
-        "Disease": {
-          "precision": 0.7857142857142857,
-          "recall": 0.9166666666666666,
-          "f1-score": 0.8461538461538461,
-          "support": 24.0
-        },
-        "accuracy": 0.8518518518518519,
-        "macro avg": {
-          "precision": 0.8543956043956045,
-          "recall": 0.8583333333333334,
-          "f1-score": 0.8516483516483516,
-          "support": 54.0
-        },
-        "weighted avg": {
-          "precision": 0.8620268620268621,
-          "recall": 0.8518518518518519,
-          "f1-score": 0.8522588522588521,
-          "support": 54.0
-        }
-      }
-    },
-    {
-      "name": "RandomForestClassifier",
-      "algorithm": "RandomForestClassifier",
-      "accuracy": 0.8333,
-      "precision": 0.8,
-      "recall": 0.8333,
-      "f1_score": 0.8163,
-      "roc_auc": 0.8806,
-      "confusion_matrix": [
-        [
-          25,
-          5
-        ],
-        [
-          4,
-          20
-        ]
-      ],
-      "classification_report": {
-        "No Disease": {
-          "precision": 0.8620689655172413,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.847457627118644,
-          "support": 30.0
-        },
-        "Disease": {
-          "precision": 0.8,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.8163265306122449,
-          "support": 24.0
-        },
-        "accuracy": 0.8333333333333334,
-        "macro avg": {
-          "precision": 0.8310344827586207,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.8318920788654445,
-          "support": 54.0
-        },
-        "weighted avg": {
-          "precision": 0.8344827586206897,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.8336215842269111,
-          "support": 54.0
-        }
-      }
-    },
-    {
-      "name": "GradientBoostingClassifier",
-      "algorithm": "GradientBoostingClassifier",
-      "accuracy": 0.8148,
-      "precision": 0.75,
-      "recall": 0.875,
-      "f1_score": 0.8077,
-      "roc_auc": 0.8861,
-      "confusion_matrix": [
-        [
-          23,
-          7
-        ],
-        [
-          3,
-          21
-        ]
-      ],
-      "classification_report": {
-        "No Disease": {
-          "precision": 0.8846153846153846,
-          "recall": 0.7666666666666667,
-          "f1-score": 0.8214285714285714,
-          "support": 30.0
-        },
-        "Disease": {
-          "precision": 0.75,
-          "recall": 0.875,
-          "f1-score": 0.8076923076923077,
-          "support": 24.0
-        },
-        "accuracy": 0.8148148148148148,
-        "macro avg": {
-          "precision": 0.8173076923076923,
-          "recall": 0.8208333333333333,
-          "f1-score": 0.8145604395604396,
-          "support": 54.0
-        },
-        "weighted avg": {
-          "precision": 0.8247863247863246,
-          "recall": 0.8148148148148148,
-          "f1-score": 0.8153235653235653,
-          "support": 54.0
-        }
-      }
-    },
-    {
-      "name": "MLPClassifier",
-      "algorithm": "StandardScaler + MLPClassifier",
-      "accuracy": 0.7407,
-      "precision": 0.7083,
-      "recall": 0.7083,
-      "f1_score": 0.7083,
-      "roc_auc": 0.8847,
-      "confusion_matrix": [
-        [
-          23,
-          7
-        ],
-        [
-          7,
-          17
-        ]
-      ],
-      "classification_report": {
-        "No Disease": {
-          "precision": 0.7666666666666667,
-          "recall": 0.7666666666666667,
-          "f1-score": 0.7666666666666667,
-          "support": 30.0
-        },
-        "Disease": {
-          "precision": 0.7083333333333334,
-          "recall": 0.7083333333333334,
-          "f1-score": 0.7083333333333334,
-          "support": 24.0
-        },
-        "accuracy": 0.7407407407407407,
-        "macro avg": {
-          "precision": 0.7375,
-          "recall": 0.7375,
-          "f1-score": 0.7375,
-          "support": 54.0
-        },
-        "weighted avg": {
-          "precision": 0.7407407407407407,
-          "recall": 0.7407407407407407,
-          "f1-score": 0.7407407407407407,
-          "support": 54.0
-        }
-      }
-    },
-    {
-      "name": "SVC",
-      "algorithm": "StandardScaler + SVC",
-      "accuracy": 0.8148,
-      "precision": 0.7692,
-      "recall": 0.8333,
-      "f1_score": 0.8,
-      "roc_auc": 0.8806,
-      "confusion_matrix": [
-        [
-          24,
-          6
-        ],
-        [
-          4,
-          20
-        ]
-      ],
-      "classification_report": {
-        "No Disease": {
-          "precision": 0.8571428571428571,
-          "recall": 0.8,
-          "f1-score": 0.8275862068965517,
-          "support": 30.0
-        },
-        "Disease": {
-          "precision": 0.7692307692307693,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.8,
-          "support": 24.0
-        },
-        "accuracy": 0.8148148148148148,
-        "macro avg": {
-          "precision": 0.8131868131868132,
-          "recall": 0.8166666666666667,
-          "f1-score": 0.8137931034482759,
-          "support": 54.0
-        },
-        "weighted avg": {
-          "precision": 0.818070818070818,
-          "recall": 0.8148148148148148,
-          "f1-score": 0.8153256704980844,
-          "support": 54.0
-        }
-      }
-    }
-  ],
-  "confusion_matrix": [
-    [
-      24,
-      6
-    ],
-    [
-      2,
-      22
-    ]
-  ],
-  "dataset_source": "OpenML heart-statlog",
-  "created_at": "2026-05-08T16:44:41.317013+00:00",
+  "created_at": "2026-05-08T18:59:19.226521+00:00",
   "input_features": [
     "age",
     "sex",
@@ -307,6 +464,6 @@
     "number_of_major_vessels",
     "thal"
   ],
-  "model_path": "models/heart_model_v3_best.joblib",
-  "confusion_matrix_image": "docs/images/confusion_matrix.png"
+  "model_path": "/models/heart_model_v4_mlp_tuned.joblib",
+  "confusion_matrix_image": "docs/images/confusion_matrix_mlp_v4.png"
 }

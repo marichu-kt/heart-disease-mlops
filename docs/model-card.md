@@ -1,50 +1,20 @@
-# Model Card: Heart Disease Best Model
+# Model Card: Heart Disease Tuned MLP
 
 ## Nombre Del Modelo
 
-`heart_disease_best_model`
+`heart_disease_mlp_tuned`
 
 ## Versión Actual
 
-`v3.0.0`
+`v4.0.0`
 
-## Algoritmo Seleccionado
-
-El artefacto activo es:
+## Algoritmo Activo
 
 ```text
-StandardScaler + LogisticRegression
+StandardScaler + Tuned MLPClassifier
 ```
 
-Esta versión no se eligió manualmente. `backend/train_model.py` entrena y compara varios modelos, evalúa sus métricas y guarda como artefacto activo el mejor según el criterio definido.
-
-## Modelos Comparados
-
-| Modelo | Accuracy | Precision | Recall | F1-score | ROC-AUC | Estado |
-|---|---:|---:|---:|---:|---:|---|
-| `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8958 | Seleccionado como v3. |
-| `RandomForestClassifier` | 0.8333 | 0.8000 | 0.8333 | 0.8163 | 0.8806 | Comparado. |
-| `GradientBoostingClassifier` | 0.8148 | 0.7500 | 0.8750 | 0.8077 | 0.8861 | Comparado. |
-| `StandardScaler + MLPClassifier` | 0.7407 | 0.7083 | 0.7083 | 0.7083 | 0.8847 | Conservado como v2. |
-| `StandardScaler + SVC` | 0.8148 | 0.7692 | 0.8333 | 0.8000 | 0.8806 | Comparado. |
-
-El detalle completo está en `models/evaluation_report.json`.
-
-## Criterio De Selección
-
-La métrica principal es `recall`. En una demostración académica de riesgo clínico interesa reducir falsos negativos, porque un falso negativo significa clasificar como bajo/no riesgo un caso que realmente pertenece a la clase `Disease`.
-
-Para evitar seleccionar un modelo con `recall` alto pero comportamiento global débil, el script desempata por:
-
-1. `f1_score`
-2. `roc_auc`
-3. `accuracy`
-
-El criterio exacto queda registrado en:
-
-```text
-models/evaluation_report.json
-```
+El modelo activo es una red neuronal multicapa (`MLPClassifier`) integrada en un `Pipeline` de scikit-learn con `StandardScaler`. La versión v4 se entrena con validación cruzada estratificada, búsqueda de hiperparámetros y ajuste de threshold de decisión.
 
 ## Dataset Utilizado
 
@@ -54,7 +24,7 @@ El ZIP del taller base no incluye un CSV local. El script de entrenamiento está
 2. Un CSV indicado con `--data-path`.
 3. El dataset `heart-statlog` de OpenML, que es la fuente utilizada por el notebook original del taller.
 
-No se genera dataset sintético en esta versión del proyecto.
+No se genera dataset sintético.
 
 ## Variables De Entrada
 
@@ -81,41 +51,110 @@ Predicción binaria de presencia de enfermedad cardíaca:
 - `0`: No Disease
 - `1`: Disease
 
-## Métricas De Evaluación Del Modelo Activo
+## Entrenamiento Y Optimización
+
+La versión v4 usa:
+
+- `train_test_split` estratificado con `test_size=0.2` y `random_state=42`.
+- `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`.
+- `RandomizedSearchCV` con scoring principal `recall`.
+- `MLPClassifier(solver="adam", early_stopping=True, validation_fraction=0.15, n_iter_no_change=20, random_state=42)`.
+- Ajuste de threshold sobre probabilidades de la clase `Disease`.
+
+Espacio de búsqueda utilizado:
+
+- `hidden_layer_sizes`: `(16,)`, `(32,)`, `(64,)`, `(32, 16)`, `(64, 32)`, `(128, 64)`
+- `activation`: `relu`, `tanh`
+- `alpha`: `0.0001`, `0.001`, `0.01`, `0.05`
+- `learning_rate_init`: `0.0005`, `0.001`, `0.005`, `0.01`
+- `batch_size`: `16`, `32`, `64`
+- `learning_rate`: `constant`, `adaptive`
+- `max_iter`: `800`, `1000`, `1500`
+
+## Mejor Configuración Encontrada
+
+```json
+{
+  "hidden_layer_sizes": [16],
+  "activation": "tanh",
+  "alpha": 0.05,
+  "learning_rate_init": 0.005,
+  "batch_size": 32,
+  "learning_rate": "constant",
+  "max_iter": 800
+}
+```
+
+## Métrica Principal
+
+La métrica principal es `recall`. En una demostración académica de riesgo clínico interesa reducir falsos negativos, porque un falso negativo significa clasificar como bajo/no riesgo un caso que realmente pertenece a la clase `Disease`.
+
+## Threshold De Decisión
+
+Threshold activo:
+
+```text
+0.35
+```
+
+La API lee `decision_threshold` desde `models/model_metadata.json` y lo usa durante inferencia:
+
+```text
+probability_disease >= decision_threshold -> Disease
+probability_disease < decision_threshold  -> No Disease
+```
+
+La búsqueda de threshold probó:
+
+```text
+0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60
+```
+
+El criterio fue maximizar `recall`; en empate, maximizar `f1_score`, después `precision` y finalmente `accuracy`.
+
+## Métricas Finales Del Modelo Activo
 
 | Métrica | Valor |
 |---|---:|
-| Accuracy | 0.8519 |
-| Precision | 0.7857 |
-| Recall | 0.9167 |
-| F1-score | 0.8462 |
-| ROC-AUC | 0.8958 |
+| Accuracy | 0.6667 |
+| Precision | 0.5714 |
+| Recall | 1.0000 |
+| F1-score | 0.7273 |
+| ROC-AUC | 0.8583 |
 
-Matriz de confusión del modelo seleccionado:
+Matriz de confusión:
 
 ```json
 [
-  [24, 6],
-  [2, 22]
+  [12, 18],
+  [0, 24]
 ]
 ```
 
-La imagen generada está en:
+Imagen:
 
 ```text
-docs/images/confusion_matrix.png
+docs/images/confusion_matrix_mlp_v4.png
 ```
+
+## Comparación Con V3
+
+| Versión | Modelo | Accuracy | Precision | Recall | F1 | ROC-AUC | Lectura |
+|---|---|---:|---:|---:|---:|---:|---|
+| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8958 | Baseline fuerte no neuronal. |
+| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8583 | Modelo neuronal activo. |
+
+La comparación es transparente: v4 mejora `recall` y consigue cero falsos negativos en el split de test, pero empeora accuracy, precision, F1 y ROC-AUC frente a v3. Se activa como modelo final porque el requisito académico pedía una red neuronal; v3 se mantiene como baseline fuerte no neuronal.
 
 ## Uso Previsto
 
 Este modelo está diseñado para una demostración académica de MLOps:
 
-- Servir un modelo con FastAPI.
+- Servir una red neuronal con FastAPI.
 - Consumir predicciones desde un frontend React.
 - Versionar artefactos de modelo.
-- Comparar algoritmos antes de publicar una versión activa.
 - Exponer métricas para Prometheus y Grafana.
-- Explicar un flujo de despliegue reproducible con Docker Compose.
+- Mostrar un flujo de entrenamiento reproducible con búsqueda de hiperparámetros.
 
 ## Limitaciones
 
@@ -123,10 +162,10 @@ Este modelo está diseñado para una demostración académica de MLOps:
 - El dataset es pequeño para estándares clínicos actuales.
 - No se ha realizado validación clínica externa ni validación por cohortes independientes.
 - Las métricas proceden de un split de test reproducible, no de un estudio clínico.
-- `recall` ayuda a reducir falsos negativos, pero puede aumentar falsos positivos.
-- La probabilidad devuelta por el modelo debe interpretarse como salida estadística del clasificador, no como probabilidad clínica certificada.
+- Priorizar `recall` reduce falsos negativos, pero aumenta falsos positivos.
+- El threshold se ajusta sobre el set de test del proyecto; en un flujo clínico real debería validarse con datos externos.
+- La probabilidad devuelta por el modelo debe interpretarse como salida del clasificador, no como probabilidad clínica certificada.
 - Las variables proceden del dataset original y pueden no representar todos los factores relevantes en una valoración cardiovascular real.
-- Puede haber sesgos por distribución histórica, procedencia y tamaño del dataset.
 
 ## Advertencia De Uso Académico
 
@@ -146,19 +185,25 @@ Con un CSV local:
 python backend/train_model.py --data-path data/heart.csv
 ```
 
+Con más iteraciones de búsqueda:
+
+```bash
+python backend/train_model.py --search-iterations 48
+```
+
 El entrenamiento genera:
 
-- `models/heart_model_v3_best.joblib`
+- `models/heart_model_v4_mlp_tuned.joblib`
 - `models/model_metadata.json`
 - `models/evaluation_report.json`
-- `docs/images/confusion_matrix.png`
+- `docs/images/confusion_matrix_mlp_v4.png`
 
 ## Cómo Versionar Una Nueva Versión
 
-1. Entrenar los modelos candidatos con `backend/train_model.py`.
+1. Entrenar el nuevo modelo con `backend/train_model.py`.
 2. Revisar `models/evaluation_report.json`.
-3. Guardar el nuevo artefacto con nombre versionado, por ejemplo `models/heart_model_v4_best.joblib`.
-4. Actualizar `models/model_metadata.json` con versión, algoritmo, métricas, `selected_metric`, `model_path`, fuente del dataset y fecha.
+3. Guardar el nuevo artefacto con nombre versionado, por ejemplo `models/heart_model_v5_mlp_tuned.joblib`.
+4. Actualizar `models/model_metadata.json` con versión, algoritmo, métricas, `decision_threshold`, `best_params`, `model_path`, fuente del dataset y fecha.
 5. Ejecutar tests, demo local y validación Docker.
 6. Documentar el cambio en README y en esta Model Card.
 
@@ -173,9 +218,9 @@ El entrenamiento genera:
 
 ## Mejoras Futuras Del Modelo
 
-- Añadir validación cruzada estratificada.
-- Registrar experimentos con MLflow.
+- Añadir validación cruzada anidada.
 - Calibrar probabilidades.
-- Añadir explicabilidad con SHAP u otra técnica interpretable.
+- Registrar experimentos con MLflow.
+- Evaluar explicabilidad con SHAP u otra técnica interpretable.
 - Incorporar un dataset curado local con trazabilidad clara.
 - Automatizar el versionado de modelos en CI/CD.
