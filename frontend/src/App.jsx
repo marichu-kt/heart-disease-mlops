@@ -31,15 +31,15 @@ const initialPatient = {
 };
 
 const fields = [
-  { name: "age", label: "Edad", min: 1, max: 120, step: 1, unit: "anos" },
+  { name: "age", label: "Edad", min: 1, max: 120, step: 1, unit: "años" },
   { name: "sex", label: "Sexo", min: 0, max: 1, step: 1, hint: "0 mujer, 1 hombre" },
-  { name: "chest", label: "Dolor toracico", min: 1, max: 4, step: 1 },
-  { name: "resting_blood_pressure", label: "Presion arterial", min: 50, max: 250, step: 1, unit: "mmHg" },
+  { name: "chest", label: "Dolor torácico", min: 1, max: 4, step: 1 },
+  { name: "resting_blood_pressure", label: "Presión arterial", min: 50, max: 250, step: 1, unit: "mmHg" },
   { name: "serum_cholestoral", label: "Colesterol", min: 100, max: 700, step: 1, unit: "mg/dl" },
-  { name: "fasting_blood_sugar", label: "Glucosa ayunas", min: 0, max: 1, step: 1, hint: "0 no, 1 si" },
-  { name: "resting_electrocardiographic_results", label: "ECG reposo", min: 0, max: 2, step: 1 },
-  { name: "maximum_heart_rate_achieved", label: "Frecuencia maxima", min: 60, max: 230, step: 1, unit: "lpm" },
-  { name: "exercise_induced_angina", label: "Angina ejercicio", min: 0, max: 1, step: 1, hint: "0 no, 1 si" },
+  { name: "fasting_blood_sugar", label: "Glucosa en ayunas", min: 0, max: 1, step: 1, hint: "0 no, 1 sí" },
+  { name: "resting_electrocardiographic_results", label: "ECG en reposo", min: 0, max: 2, step: 1 },
+  { name: "maximum_heart_rate_achieved", label: "Frecuencia máxima", min: 60, max: 230, step: 1, unit: "lpm" },
+  { name: "exercise_induced_angina", label: "Angina por ejercicio", min: 0, max: 1, step: 1, hint: "0 no, 1 sí" },
   { name: "oldpeak", label: "Oldpeak", min: 0, max: 10, step: 0.1 },
   { name: "slope", label: "Pendiente ST", min: 1, max: 3, step: 1 },
   { name: "number_of_major_vessels", label: "Vasos principales", min: 0, max: 3, step: 1 },
@@ -50,6 +50,23 @@ function riskClass(level) {
   if (level === "High") return "riskHigh";
   if (level === "Medium") return "riskMedium";
   return "riskLow";
+}
+
+function riskLabel(level) {
+  if (level === "High") return "Riesgo alto";
+  if (level === "Medium") return "Riesgo medio";
+  return "Riesgo bajo";
+}
+
+function predictionLabel(label) {
+  return label === "Disease" ? "Posible enfermedad" : "Sin enfermedad detectada";
+}
+
+function apiStatusLabel(status) {
+  if (!status) return "Comprobando";
+  if (status.status === "healthy") return "API operativa";
+  if (status.status === "offline") return "API sin conexión";
+  return "API no disponible";
 }
 
 function App() {
@@ -98,7 +115,7 @@ function App() {
     setResult(null);
 
     if (!requiredFieldsOk) {
-      setError("Revisa los valores del formulario antes de lanzar la prediccion.");
+      setError("Revisa los valores del formulario antes de lanzar la predicción.");
       return;
     }
 
@@ -112,7 +129,7 @@ function App() {
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.detail || "La API no pudo generar la prediccion.");
+        throw new Error(payload.detail || "La API no pudo generar la predicción.");
       }
 
       setResult(await response.json());
@@ -124,6 +141,7 @@ function App() {
   }
 
   const diseaseProbability = result?.probability != null ? Math.round(result.probability * 100) : null;
+  const apiOnline = status?.status === "healthy";
 
   return (
     <main className="appShell">
@@ -138,10 +156,10 @@ function App() {
           <div className="heroGrid">
             <div>
               <p className="eyebrow">FastAPI + React + Prometheus + Grafana</p>
-              <h1>Prediccion clinica con modelo MLP versionado</h1>
+              <h1>Predicción clínica con modelo MLP versionado</h1>
               <p className="heroCopy">
-                Dashboard medico para consultar el riesgo estimado de enfermedad cardiaca,
-                consumir una API real y mostrar la version del modelo usado en inferencia.
+                Dashboard médico para consultar el riesgo estimado de enfermedad cardíaca,
+                consumir una API real y mostrar la versión del modelo usado en inferencia.
               </p>
               <div className="heroActions">
                 <a href={`${API_URL}/docs`} target="_blank" rel="noreferrer" className="ghostButton">
@@ -150,26 +168,30 @@ function App() {
                 </a>
                 <a href={`${API_URL}/metrics`} target="_blank" rel="noreferrer" className="ghostButton">
                   <Gauge size={18} />
-                  Metrics
+                  Métricas
                 </a>
               </div>
             </div>
             <div className="statusPanel" aria-label="Estado del sistema">
-              <div>
+              <div className={apiOnline ? "statusOk" : "statusWarn"}>
                 <span className="panelLabel">API</span>
-                <strong>{status?.status || "checking"}</strong>
+                <strong>{apiStatusLabel(status)}</strong>
+                <small>Endpoint /health</small>
               </div>
-              <div>
+              <div className={status?.model_loaded ? "statusOk" : "statusWarn"}>
                 <span className="panelLabel">Modelo</span>
                 <strong>{modelInfo?.version || status?.model_version || "..."}</strong>
+                <small>{status?.model_loaded ? "Modelo cargado" : "Pendiente de carga"}</small>
               </div>
-              <div>
+              <div className="statusNeutral">
                 <span className="panelLabel">Algoritmo</span>
                 <strong>{modelInfo?.algorithm || "MLPClassifier"}</strong>
+                <small>Pipeline versionado</small>
               </div>
-              <div>
-                <span className="panelLabel">Accuracy</span>
+              <div className="statusNeutral">
+                <span className="panelLabel">Exactitud</span>
                 <strong>{modelInfo?.accuracy ? `${Math.round(modelInfo.accuracy * 100)}%` : "pendiente"}</strong>
+                <small>Según metadatos</small>
               </div>
             </div>
           </div>
@@ -181,7 +203,7 @@ function App() {
           <div className="sectionHeader">
             <div>
               <p className="eyebrow">Entrada del paciente</p>
-              <h2>Variables clinicas</h2>
+              <h2>Variables clínicas</h2>
             </div>
             <Stethoscope size={28} />
           </div>
@@ -215,7 +237,7 @@ function App() {
 
           <button className="primaryButton" type="submit" disabled={loading}>
             {loading ? <Loader2 className="spin" size={20} /> : <Sparkles size={20} />}
-            {loading ? "Analizando..." : "Lanzar prediccion"}
+            {loading ? "Analizando..." : "Lanzar predicción"}
           </button>
         </form>
 
@@ -231,27 +253,28 @@ function App() {
           {!result && !loading && (
             <div className="emptyState">
               <ShieldCheck size={42} />
-              <p>Completa el formulario y lanza una prediccion para ver el resultado del modelo.</p>
+              <p>Completa el formulario y lanza una predicción para ver el resultado del modelo.</p>
             </div>
           )}
 
           {loading && (
             <div className="emptyState">
               <Loader2 className="spin" size={42} />
-              <p>Consultando la API FastAPI y registrando metricas de inferencia.</p>
+              <p>Consultando la API FastAPI y registrando métricas de inferencia.</p>
             </div>
           )}
 
           {result && (
             <div className={`resultCard ${riskClass(result.risk_level)}`}>
               <div className="resultTopline">
-                <span>{result.label}</span>
+                <span>{predictionLabel(result.label)}</span>
                 <CheckCircle2 size={22} />
               </div>
-              <strong>{result.risk_level}</strong>
+              <strong>{riskLabel(result.risk_level)}</strong>
               <p>Nivel de riesgo devuelto por el modelo versionado.</p>
 
               <div className="probabilityWrap">
+                <span className="probabilityLabel">Probabilidad estimada de enfermedad</span>
                 <div className="probabilityTrack">
                   <span style={{ width: `${diseaseProbability ?? 0}%` }} />
                 </div>
@@ -260,7 +283,7 @@ function App() {
 
               <div className="resultStats">
                 <div>
-                  <span>Prediccion</span>
+                  <span>Predicción</span>
                   <strong>{result.prediction}</strong>
                 </div>
                 <div>
