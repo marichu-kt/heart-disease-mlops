@@ -16,7 +16,15 @@ Aplicación MLOps completa para predecir riesgo de enfermedad cardíaca a partir
 
 > Uso académico. Este sistema no sustituye una valoración médica real.
 
-## 1. Descripción General
+## Resumen Ejecutivo
+
+Heart Disease MLOps integra un dashboard React, una API FastAPI, un modelo neuronal MLP versionado, métricas Prometheus, dashboard Grafana, Docker Compose, tests y CI. La versión activa del modelo es `v4.2.0 — StandardScaler + Robust Calibrated MLPClassifier`.
+
+![Dashboard principal](docs/images/frontend-dashboard.png)
+
+La captura anterior muestra el panel principal de inferencia: estado de API, modelo `v4.2.0`, formulario clínico agrupado, resultado, probabilidades, riesgo, tiempo de inferencia y accesos técnicos.
+
+## 1. Qué Hace El Proyecto
 
 El proyecto expone un modelo de Machine Learning mediante una API FastAPI, permite hacer predicciones desde un frontend React moderno y publica métricas operativas para Prometheus y Grafana.
 
@@ -44,7 +52,7 @@ docker compose up --build
 4. Genera tráfico adicional para métricas:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
 
 5. Abre Swagger en http://localhost:8000/docs y prueba `POST /predict`.
@@ -58,7 +66,7 @@ Guía completa: [`docs/demo-guide.md`](docs/demo-guide.md).
 Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca en un proyecto final profesional de MLOps:
 
 - API documentada y lista para integración.
-- Modelo final v4.1 basado en red neuronal `MLPClassifier` balanceada con validación cruzada, búsqueda de hiperparámetros y threshold ajustado.
+- Modelo final v4.2 basado en red neuronal `MLPClassifier`, evaluación robusta con validación cruzada repetida, búsqueda de hiperparámetros, F2-score y threshold ajustado.
 - Versionado de modelos en `models/`.
 - Frontend visual, responsive y útil para una demo.
 - Métricas compatibles con Prometheus.
@@ -93,7 +101,7 @@ No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-
 | Área | Tecnología |
 |---|---|
 | API | FastAPI, Pydantic, Uvicorn |
-| ML | scikit-learn, `StandardScaler`, `MLPClassifier`, `RandomizedSearchCV`, `StratifiedKFold`, joblib |
+| ML | scikit-learn, `StandardScaler`, `MLPClassifier`, `RandomizedSearchCV`, `RepeatedStratifiedKFold`, joblib |
 | Frontend | React, Vite, CSS responsive |
 | Métricas | prometheus-client |
 | Monitorización | Prometheus, Grafana |
@@ -122,7 +130,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 | Versionado de modelo | Los artefactos se conservan en `models/` y se cargan desde metadata. |
 | Métricas | `/metrics` expone requests, errores, latencia e inferencias. |
 | Model Card | `docs/model-card.md` documenta uso previsto, límites y riesgos. |
-| Evaluación | `models/evaluation_report.json` registra búsqueda de hiperparámetros, threshold, métricas finales, matriz de confusión y comparación con v3 y v4.0. |
+| Evaluación | `models/evaluation_report.json` registra búsqueda de hiperparámetros, validación cruzada repetida, calibración evaluada, threshold, métricas finales, curvas, matriz de confusión y comparación entre v3, v4.0, v4.1 y v4.2. |
 | Logging | La API registra carga de modelo, versión, peticiones, inferencias y errores de forma clara. |
 
 ## 6. Arquitectura General
@@ -131,11 +139,13 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 flowchart LR
     Usuario["Usuario"] --> Frontend["Frontend React<br/>localhost:3000"]
     Frontend --> API["API FastAPI<br/>localhost:8000"]
-    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v4_1_mlp_balanced.joblib"]
+    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v4_2_mlp_calibrated.joblib"]
     API --> Metrics["/metrics"]
     Metrics --> Prometheus["Prometheus<br/>localhost:9090"]
     Prometheus --> Grafana["Grafana<br/>localhost:3001"]
 ```
+
+El flujo principal es: usuario -> frontend React -> API FastAPI -> modelo MLP versionado. En paralelo, FastAPI expone `/metrics`, Prometheus scrapea esas métricas y Grafana las visualiza en un dashboard operativo.
 
 ## 7. Flujo De Predicción
 
@@ -145,8 +155,8 @@ flowchart TD
     B --> C["POST /predict"]
     C --> D["API valida el schema Pydantic"]
     D --> E["ModelService prepara DataFrame"]
-    E --> F["MLP v4.1 balanceada<br/>StandardScaler + MLPClassifier"]
-    F --> G["Probabilidad Disease + threshold ajustado"]
+    E --> F["MLP v4.2 robusta<br/>StandardScaler + MLPClassifier"]
+    F --> G["Probabilidad Disease + threshold F2"]
     G --> H["API devuelve JSON"]
     H --> I["Frontend muestra riesgo, probabilidad y versión"]
 ```
@@ -192,6 +202,7 @@ heart-disease-mlops/
 │   ├── heart_model_v3_best.joblib
 │   ├── heart_model_v4_mlp_tuned.joblib
 │   ├── heart_model_v4_1_mlp_balanced.joblib
+│   ├── heart_model_v4_2_mlp_calibrated.joblib
 │   ├── evaluation_report.json
 │   └── model_metadata.json
 ├── monitoring/
@@ -230,6 +241,8 @@ Se utilizó OpenML `heart-statlog` porque era el dataset original del taller bas
 
 El dataset contiene 270 registros de pacientes. Es suficiente para un proyecto académico y una demostración MLOps completa, pero su tamaño reducido se documenta como una limitación del modelo. En un caso real, la mejora más importante sería sustituirlo por un dataset mayor, trazable y compatible con las mismas 13 variables, por ejemplo colocándolo en `data/heart.csv`.
 
+No se usaron datos sintéticos como dataset principal. La prioridad fue mantener compatibilidad con el taller base y reproducibilidad del flujo de entrenamiento.
+
 Columnas esperadas:
 
 | Campo | Descripción |
@@ -252,114 +265,180 @@ El script admite alias habituales del dataset UCI/OpenML, como `chest_pain`, `re
 
 ## 11. Modelo De Machine Learning
 
-La versión activa es `v4.1.0`, una red neuronal multicapa entrenada con `MLPClassifier`. Esta versión conserva el requisito académico de usar una red neuronal, pero corrige el comportamiento de v4.0: aquella versión alcanzaba recall perfecto, aunque con demasiados falsos positivos. v4.1 mantiene recall alto y mejora el equilibrio entre precision, F1-score y falsos positivos.
+La versión activa es `v4.2.0`, una red neuronal multicapa entrenada con `MLPClassifier`. Esta versión mantiene el requisito académico de entregar una red neuronal, pero añade una evaluación más robusta que v4.1: validación cruzada repetida, búsqueda de hiperparámetros con F2-score, ajuste explícito de threshold y evaluación de calibración de probabilidades.
 
 Pipeline activo:
 
 ```text
-StandardScaler + Balanced Tuned MLPClassifier
+StandardScaler + Robust Calibrated MLPClassifier
 ```
 
 Archivo generado:
 
 ```text
-models/heart_model_v4_1_mlp_balanced.joblib
+models/heart_model_v4_2_mlp_calibrated.joblib
 ```
 
-Metadata generada:
+Metadata y reporte:
 
 ```text
 models/model_metadata.json
-```
-
-Reporte de evaluación:
-
-```text
 models/evaluation_report.json
 ```
 
-Ejemplo de metadata:
+Ejemplo resumido de metadata:
 
 ```json
 {
-  "model_name": "heart_disease_mlp_balanced",
-  "version": "v4.1.0",
-  "algorithm": "StandardScaler + Balanced Tuned MLPClassifier",
-  "accuracy": 0.7778,
-  "precision": 0.6875,
-  "recall": 0.9167,
-  "f1_score": 0.7857,
-  "f2_score": 0.8594,
-  "roc_auc": 0.8569,
-  "selected_metric": "recall_floor_0.90_then_f1_score",
-  "decision_threshold": 0.55,
+  "model_name": "heart_disease_mlp_calibrated",
+  "version": "v4.2.0",
+  "algorithm": "StandardScaler + Robust Calibrated MLPClassifier",
+  "accuracy": 0.7222,
+  "precision": 0.6216,
+  "recall": 0.9583,
+  "f1_score": 0.7541,
+  "f2_score": 0.8647,
+  "roc_auc": 0.8806,
+  "selected_metric": "f2_score",
+  "decision_threshold": 0.35,
+  "calibration_method": "sigmoid evaluated, not applied",
+  "calibration_applied": false,
   "input_features": ["age", "sex", "..."],
-  "model_path": "/models/heart_model_v4_1_mlp_balanced.joblib",
-  "evaluation_report_path": "models/evaluation_report.json"
+  "model_path": "/models/heart_model_v4_2_mlp_calibrated.joblib"
 }
 ```
 
 ## Reporte De Evaluación
 
-`models/evaluation_report.json` resume la evaluación completa sobre el split de test usado en entrenamiento. Incluye el espacio de búsqueda de hiperparámetros, la mejor configuración encontrada, el resultado de validación cruzada, el threshold elegido, la matriz de confusión, la fuente del dataset y la comparación con v3 y v4.0.
+`models/evaluation_report.json` resume la evaluación completa sobre el split de test usado en entrenamiento. Incluye el espacio de búsqueda, la mejor configuración, resumen de validación cruzada, comparación calibrada/no calibrada, threshold elegido, matriz de confusión, curvas ROC y Precision-Recall, importancia por permutación, fuente del dataset y comparación entre v3.0, v4.0, v4.1 y v4.2.
 
 | Métrica | Valor actual |
 |---|---:|
-| Accuracy | 0.7778 |
-| Precision | 0.6875 |
-| Recall | 0.9167 |
-| F1-score | 0.7857 |
-| F2-score | 0.8594 |
-| ROC-AUC | 0.8569 |
-| Decision threshold | 0.55 |
+| Accuracy | 0.7222 |
+| Precision | 0.6216 |
+| Recall | 0.9583 |
+| F1-score | 0.7541 |
+| F2-score | 0.8647 |
+| ROC-AUC | 0.8806 |
+| Average precision | 0.8764 |
+| Brier score | 0.1483 |
+| Decision threshold | 0.35 |
 
-La matriz de confusión del modelo neuronal v4.1 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_1.png`.
+La matriz de confusión del modelo neuronal v4.2 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_2.png`.
 
-![Matriz de confusión MLP v4.1](docs/images/confusion_matrix_mlp_v4_1.png)
+![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
 
-## 12. Modelo Neuronal Final V4.1
+## 12. Modelo Neuronal Final V4.2
 
-`MLPClassifier` implementa una red neuronal multicapa dentro de scikit-learn. En esta versión se entrena como un pipeline reproducible:
+`MLPClassifier` implementa una red neuronal multicapa dentro de scikit-learn. En v4.2 se entrena como un pipeline reproducible:
 
-- `StandardScaler` normaliza las variables de entrada.
-- `MLPClassifier` usa `solver="adam"`.
-- `early_stopping=True` detiene el entrenamiento cuando deja de mejorar.
-- `StratifiedKFold` mantiene proporciones de clase en validación cruzada.
-- `RandomizedSearchCV` busca hiperparámetros sin hacer una búsqueda exhaustiva demasiado lenta.
-- El threshold de decisión no queda fijo en `0.5`; se ajusta sobre el set de test.
+- `StandardScaler` normaliza las 13 variables clínicas.
+- `MLPClassifier` usa `solver="adam"`, `early_stopping=True`, `validation_fraction=0.15` y `n_iter_no_change=20`.
+- `RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=42)` hace la validación cruzada más estable que una única partición.
+- `RandomizedSearchCV` prueba hiperparámetros sin hacer una búsqueda exhaustiva demasiado lenta.
+- La métrica principal de búsqueda es `F2-score`.
+- El threshold de decisión no queda fijo en `0.5`; se ajusta evaluando varios umbrales.
+- La calibración sigmoid se evaluó con `CalibratedClassifierCV`. No se aplicó al artefacto final porque reducía F2-score y no mejoraba suficientemente la calibración según Brier score.
 
-La mejor configuración encontrada para v4.1 fue:
+La mejor configuración encontrada para v4.2 fue:
 
 ```json
 {
-  "hidden_layer_sizes": [16],
+  "hidden_layer_sizes": [64, 32],
   "activation": "tanh",
-  "alpha": 0.01,
-  "learning_rate_init": 0.001,
-  "batch_size": 32,
-  "learning_rate": "constant",
-  "max_iter": 800
+  "alpha": 0.0001,
+  "learning_rate_init": 0.0005,
+  "batch_size": 64,
+  "learning_rate": "adaptive",
+  "max_iter": 1500
 }
 ```
 
-## Por Qué Recall Mínimo Y F1
+## Validación Cruzada, Calibración Y Threshold
 
-En un contexto clínico académico interesa reducir falsos negativos: es preferible que el sistema marque casos dudosos para revisión antes que dejar pasar casos reales de `Disease`. Aun así, v4.0 demostró que maximizar solo `recall` puede generar demasiados falsos positivos.
+En un contexto clínico académico interesa reducir falsos negativos: es preferible que el sistema marque casos dudosos para revisión antes que dejar pasar casos reales de `Disease`. Pero v4.0 demostró que maximizar solo `recall` puede producir demasiados falsos positivos. Por eso v4.2 usa `F2-score`: da más peso al recall que a precision, pero no ignora completamente los falsos positivos.
 
-Por eso v4.1 usa un criterio más equilibrado para threshold tuning:
-
-1. considerar thresholds con `recall >= 0.90`;
-2. elegir el de mayor `f1_score`;
-3. en empate, elegir mayor `precision`;
-4. en empate, elegir mayor `accuracy`;
-5. si ningún threshold alcanza `recall >= 0.90`, elegir el de mayor `f2_score`.
-
-El threshold activo es `0.55`. La API lo lee desde `models/model_metadata.json` y lo usa en inferencia:
+El threshold activo es `0.35`. La API lo lee desde `models/model_metadata.json` y lo usa en inferencia:
 
 ```text
 probability_disease >= decision_threshold -> Disease
 probability_disease < decision_threshold  -> No Disease
 ```
+
+La calibración se documenta de forma explícita:
+
+| Variante | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Brier | Decisión |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Sin calibrar | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.1483 | Activa |
+| Sigmoid calibrada | 0.7963 | 0.7241 | 0.8750 | 0.7925 | 0.8400 | 0.8597 | 0.1540 | Evaluada, no aplicada |
+
+La variante calibrada mejora accuracy, precision y F1, pero reduce recall, F2 y ROC-AUC. Como el proyecto prioriza F2 para mantener sensibilidad en un contexto académico de riesgo, se conserva la red sin calibrar y se deja la decisión documentada.
+
+![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
+
+## Métricas del modelo
+
+Para interpretar el modelo se usan las siguientes cantidades:
+
+- `TP`: verdadero positivo, paciente con `Disease` predicho como `Disease`.
+- `TN`: verdadero negativo, paciente sin enfermedad predicho como `No Disease`.
+- `FP`: falso positivo, paciente sin enfermedad marcado como `Disease`.
+- `FN`: falso negativo, paciente con enfermedad marcado como `No Disease`.
+
+| Métrica | Fórmula | Qué responde |
+|---|---|---|
+| Accuracy | $Accuracy = \frac{TP + TN}{TP + TN + FP + FN}$ | Mide aciertos globales. |
+| Precision | $Precision = \frac{TP}{TP + FP}$ | De los casos marcados como enfermedad, cuántos realmente lo eran. |
+| Recall | $Recall = \frac{TP}{TP + FN}$ | De los enfermos reales, cuántos detectó el modelo. |
+| F1-score | $F1 = 2 \cdot \frac{Precision \cdot Recall}{Precision + Recall}$ | Equilibra precision y recall. |
+| F2-score | $F2 = 5 \cdot \frac{Precision \cdot Recall}{4 \cdot Precision + Recall}$ | Da más peso al recall que a precision. |
+
+Regla de decisión:
+
+$$
+\hat{y} =
+\begin{cases}
+Disease & \text{si } P(Disease) \geq threshold \\
+No\ Disease & \text{si } P(Disease) < threshold
+\end{cases}
+$$
+
+Lectura sencilla:
+
+- Precision responde: de los que marqué como enfermos, cuántos realmente eran enfermos.
+- Recall responde: de los enfermos reales, cuántos detecté.
+- F2 da más importancia al recall que a precision.
+- En este proyecto académico interesa mantener recall alto, pero documentando los falsos positivos.
+
+## Por Qué No Usamos Solo Accuracy
+
+`Accuracy` puede ocultar errores importantes cuando una clase pesa más que otra o cuando el coste de los errores no es simétrico. En riesgo cardíaco, un falso negativo es más delicado que un falso positivo porque implica dejar pasar un caso real de `Disease`. Por eso se eligió v4.2.0 aunque no tenga la mayor accuracy: mantiene el modelo final como red neuronal, mejora recall/F2/ROC-AUC frente a v4.1 y reduce falsos negativos, aceptando más falsos positivos como trade-off documentado.
+
+## Imágenes Técnicas Del Modelo
+
+Estas imágenes se generan con `python backend/train_model.py` y están incluidas para defender el entrenamiento:
+
+La matriz de confusión resume aciertos y errores del modelo v4.2: `TN=16`, `FP=14`, `FN=1`, `TP=23`. La versión final reduce falsos negativos frente a v4.1, aunque acepta más falsos positivos como trade-off.
+
+![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
+
+El gráfico de threshold muestra cómo cambian precision, recall, F1 y F2 al mover el umbral de decisión. El umbral `0.35` se eligió porque maximiza F2-score en el set de test.
+
+![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
+
+La curva ROC muestra la capacidad del modelo para separar clases a distintos umbrales. En v4.2 el ROC-AUC es `0.8806`.
+
+![Curva ROC MLP v4.2](docs/images/roc_curve_mlp_v4_2.png)
+
+La curva Precision-Recall es especialmente útil cuando importa detectar positivos y entender el balance entre sensibilidad y falsos positivos.
+
+![Curva Precision-Recall MLP v4.2](docs/images/precision_recall_curve_mlp_v4_2.png)
+
+La importancia por permutación estima cuánto cae F2-score al alterar una variable. Es una aproximación explicativa del modelo, no una afirmación de causalidad clínica.
+
+![Importancia por permutación MLP v4.2](docs/images/feature_importance_mlp_v4_2.png)
+
+No se genera `docs/images/cv_metrics_boxplot.png` en esta iteración porque `models/evaluation_report.json` conserva resumen y mejores candidatos de validación cruzada, pero no métricas completas por fold/repetición para Accuracy, Precision, Recall, F1, F2 y ROC-AUC. Se deja como mejora futura para evitar un boxplot artificial.
 
 ## 13. Versionado Del Modelo
 
@@ -371,19 +450,23 @@ Los modelos se guardan en `models/` con nombre versionado:
 | v2 | `heart_model_v2_mlp.joblib` | Modelo MLP conservado como versión anterior. |
 | v3 | `heart_model_v3_best.joblib` | Baseline fuerte no neuronal conservado. |
 | v4.0 | `heart_model_v4_mlp_tuned.joblib` | Modelo neuronal con recall máximo conservado. |
-| v4.1 | `heart_model_v4_1_mlp_balanced.joblib` | Modelo neuronal balanceado activo. |
+| v4.1 | `heart_model_v4_1_mlp_balanced.joblib` | Modelo neuronal balanceado conservado. |
+| v4.2 | `heart_model_v4_2_mlp_calibrated.joblib` | Modelo neuronal robusto activo. |
 
 La API carga el modelo indicado por `models/model_metadata.json`. Si se añade una versión futura, debe actualizarse el metadata para apuntar al nuevo archivo.
 
-## Comparativa V3 Vs V4.0 Vs V4.1
+## Comparativa V3 Vs V4.0 Vs V4.1 Vs V4.2
 
-| Versión | Modelo | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Comentario |
-|---|---|---:|---:|---:|---:|---:|---:|---|
-| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8871 | 0.8958 | Baseline fuerte no neuronal. |
-| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8696 | 0.8583 | Red neuronal con cero falsos negativos, pero 18 falsos positivos. |
-| v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | Modelo neuronal activo, reduce falsos positivos de 18 a 10 manteniendo recall alto. |
+| Versión | Modelo | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Threshold | Comentario |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8871 | 0.8958 | n/a | Baseline fuerte no neuronal. |
+| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8696 | 0.8583 | 0.35 | Red neuronal con cero falsos negativos, pero 18 falsos positivos. |
+| v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | 0.55 | Red neuronal más equilibrada, con 10 falsos positivos y 2 falsos negativos. |
+| v4.2.0 | `StandardScaler + Robust Calibrated MLPClassifier` | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.35 | Modelo neuronal activo; mejora recall, F2 y ROC-AUC frente a v4.1, reduce falsos negativos y acepta más falsos positivos como trade-off. |
 
-La comparación es intencionadamente transparente: v3 sigue siendo un baseline no neuronal fuerte y no se elimina. v4.0 priorizaba al máximo el recall, con 0 falsos negativos pero demasiados falsos positivos. v4.1 mantiene el modelo activo como red neuronal, conserva recall alto y mejora accuracy, precision y F1 respecto a v4.0, reduciendo falsos positivos de 18 a 10.
+La comparación es intencionadamente transparente: v3 sigue siendo un baseline no neuronal fuerte y no se elimina. v4.1 sigue siendo mejor que v4.2 en accuracy, precision y F1. v4.2 se activa porque mantiene la entrega final como red neuronal MLP, usa una evaluación más robusta, mejora recall, F2 y ROC-AUC frente a v4.1 y documenta claramente el trade-off de falsos positivos.
+
+![Comparativa visual de modelos](docs/images/model_comparison_metrics.png)
 
 El detalle completo está en `models/evaluation_report.json`. El modelo v1 del taller se mantiene como referencia histórica en `models/heart_model_v1_logistic.joblib`.
 
@@ -428,8 +511,8 @@ Ejemplo de respuesta de `/version`:
 {
   "app_name": "Heart Disease MLOps API",
   "app_version": "1.0.0",
-  "model_version": "v4.1.0",
-  "model_name": "heart_disease_mlp_balanced",
+  "model_version": "v4.2.0",
+  "model_name": "heart_disease_mlp_calibrated",
   "environment": "local",
   "timestamp": "2026-05-08T10:18:13.703385+00:00"
 }
@@ -465,13 +548,13 @@ Respuesta esperada:
   "label": "Disease",
   "probability": 0.82,
   "risk_level": "High",
-  "model_version": "v4.1.0",
+  "model_version": "v4.2.0",
   "inference_time_ms": 3.4,
   "probabilities": {
     "no_disease": 0.18,
     "disease": 0.82
   },
-  "decision_threshold": 0.55
+  "decision_threshold": 0.35
 }
 ```
 
@@ -528,7 +611,7 @@ python scripts/demo_requests.py
 Uso con parámetros:
 
 ```bash
-python scripts/demo_requests.py --api-url http://localhost:8000 --requests 25
+python scripts/demo_requests.py --api-url http://localhost:8000 --requests 500 --sleep 0.01
 ```
 
 El resumen por consola incluye:
@@ -583,8 +666,10 @@ docker compose up --build
 2. Genera tráfico real:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
+
+Para capturas finales se usaron 500 peticiones con 0 errores, de forma que Prometheus y Grafana muestren series y paneles con datos suficientes.
 
 3. Abre targets:
 
@@ -655,7 +740,7 @@ Paneles incluidos y organizados por filas:
 Pasos recomendados:
 
 1. Levanta Docker Compose.
-2. Genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05`.
+2. Genera tráfico con `python scripts/demo_requests.py --requests 500 --sleep 0.01`.
 3. Entra en Grafana con las credenciales de demo local.
 4. Abre la carpeta `MLOps`.
 5. Abre `Heart Disease MLOps Observability`.
@@ -720,10 +805,15 @@ python backend/train_model.py --data-path data/heart.csv
 Salida esperada:
 
 ```text
-models/heart_model_v4_1_mlp_balanced.joblib
+models/heart_model_v4_2_mlp_calibrated.joblib
 models/model_metadata.json
 models/evaluation_report.json
-docs/images/confusion_matrix_mlp_v4_1.png
+docs/images/confusion_matrix_mlp_v4_2.png
+docs/images/roc_curve_mlp_v4_2.png
+docs/images/precision_recall_curve_mlp_v4_2.png
+docs/images/feature_importance_mlp_v4_2.png
+docs/images/threshold_metrics_mlp_v4_2.png
+docs/images/model_comparison_metrics.png
 ```
 
 ## 20. Cómo Ejecutar Los Tests
@@ -751,6 +841,7 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 |---|---|
 | Logo icono | `docs/images/logo-icon.png` |
 | Logo completo | `docs/images/logo-full.png` |
+| Frontend dashboard | `docs/images/frontend-dashboard.png` |
 | Frontend modo claro | `docs/images/frontend-light.png` |
 | Frontend modo oscuro | `docs/images/frontend-dark.png` |
 | Swagger | `docs/images/swagger.png` |
@@ -760,30 +851,48 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Matriz de confusión v3 | `docs/images/confusion_matrix.png` |
 | Matriz de confusión MLP v4 | `docs/images/confusion_matrix_mlp_v4.png` |
 | Matriz de confusión MLP v4.1 | `docs/images/confusion_matrix_mlp_v4_1.png` |
+| Matriz de confusión MLP v4.2 | `docs/images/confusion_matrix_mlp_v4_2.png` |
+| Curva ROC MLP v4.2 | `docs/images/roc_curve_mlp_v4_2.png` |
+| Curva Precision-Recall MLP v4.2 | `docs/images/precision_recall_curve_mlp_v4_2.png` |
+| Importancia por permutación MLP v4.2 | `docs/images/feature_importance_mlp_v4_2.png` |
+| Métricas por threshold MLP v4.2 | `docs/images/threshold_metrics_mlp_v4_2.png` |
+| Comparativa de modelos | `docs/images/model_comparison_metrics.png` |
 
 ### Frontend Claro
 
 ![Frontend claro](docs/images/frontend-light.png)
 
+El modo claro muestra el dashboard principal de inferencia con logo, modelo activo v4.2.0, resultado, probabilidades y formulario clínico agrupado.
+
 ### Frontend Oscuro
 
 ![Frontend oscuro](docs/images/frontend-dark.png)
+
+El modo oscuro conserva la misma estructura y contraste, útil para demostrar el toggle de tema guardado en `localStorage`.
 
 ### Swagger
 
 ![Swagger](docs/images/swagger.png)
 
+Swagger documenta los endpoints de sistema, modelo, predicción y monitorización, y permite probar `POST /predict` desde el navegador.
+
 ### Prometheus Targets
 
 ![Prometheus targets](docs/images/prometheus-targets.png)
+
+La pantalla de targets confirma que Prometheus scrapea correctamente el job `heart-api`.
 
 ### Prometheus Graph
 
 ![Prometheus graph](docs/images/prometheus-graph.png)
 
+La query mostrada resume predicciones por clase usando datos reales generados con `scripts/demo_requests.py`.
+
 ### Grafana
 
 ![Grafana dashboard](docs/images/grafana-dashboard.png)
+
+Grafana muestra la observabilidad operativa de la demo: API UP, total de predicciones, tasa de requests, latencias, errores y distribución por clase/riesgo.
 
 ### Matriz De Confusión V3
 
@@ -796,6 +905,20 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 ### Matriz De Confusión MLP V4.1
 
 ![Matriz de confusión MLP v4.1](docs/images/confusion_matrix_mlp_v4_1.png)
+
+### Evaluación Técnica MLP V4.2
+
+![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
+
+![Curva ROC MLP v4.2](docs/images/roc_curve_mlp_v4_2.png)
+
+![Curva Precision-Recall MLP v4.2](docs/images/precision_recall_curve_mlp_v4_2.png)
+
+![Importancia por permutación MLP v4.2](docs/images/feature_importance_mlp_v4_2.png)
+
+![Métricas por threshold MLP v4.2](docs/images/threshold_metrics_mlp_v4_2.png)
+
+![Comparativa de modelos](docs/images/model_comparison_metrics.png)
 
 ## 22. Posibles Problemas Y Soluciones
 
@@ -822,7 +945,8 @@ Antes de hacer público el repositorio, revisa:
 ## 23. Mejoras Futuras
 
 - Añadir validación clínica más detallada por variable.
-- Calibrar probabilidades del MLP y evaluar thresholds en validación cruzada anidada.
+- Evaluar calibración de probabilidades con más datos y validación externa.
+- Evaluar thresholds en validación cruzada anidada.
 - Ampliar CI/CD con publicación de imágenes Docker y release automática.
 - Persistir métricas y logs con almacenamiento externo.
 - Añadir autenticación para el frontend y la API.
@@ -831,4 +955,4 @@ Antes de hacer público el repositorio, revisa:
 
 ## 24. Conclusión
 
-Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4.1 versionado, threshold documentado, interfaz visual, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller, el baseline v3 y la red neuronal v4.0, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.
+Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4.2 versionado, F2-score como criterio principal, threshold documentado, evaluación visual, interfaz profesional, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller, el baseline v3 y las redes neuronales v4.0 y v4.1, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.

@@ -13,7 +13,7 @@ docker compose up --build
 2. Genera tráfico real:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
 
 3. Abre Prometheus:

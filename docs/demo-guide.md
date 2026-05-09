@@ -38,8 +38,10 @@ Servicios esperados:
 ## 4. Generar Métricas
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
+
+Para una demo breve pueden usarse 25 peticiones, pero para capturas finales de Prometheus y Grafana se recomienda generar 500 peticiones. En la validación final de esta entrega se usaron 500 peticiones con 0 errores.
 
 El script muestra:
 
@@ -67,6 +69,7 @@ sum by (label) (heart_predictions_by_class_total)
 2. Entra con las credenciales de demo local.
 3. Abre `Heart Disease MLOps Observability`.
 4. Revisa las filas `Overview`, `Predictions`, `Latency`, `Errors` y `Model`.
+5. Confirma que aparecen datos en `Total predictions`, `Predictions by class`, latencia y errores.
 
 ## 7. Cierre De La Demo
 

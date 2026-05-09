@@ -66,7 +66,7 @@ docker compose up --build
 2. Genera tráfico:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
 
 3. Entra en Grafana.
@@ -77,7 +77,7 @@ python scripts/demo_requests.py --requests 25 --sleep 0.05
 ## Si Aparece Sin Datos
 
 - Comprueba que Prometheus ve el target `heart-api` en http://localhost:9090/targets.
-- Ejecuta de nuevo `python scripts/demo_requests.py --requests 25`.
+- Ejecuta de nuevo `python scripts/demo_requests.py --requests 500 --sleep 0.01`.
 - Revisa que el dashboard usa el datasource `Prometheus` con uid `prometheus`.
 - Comprueba `docker compose logs api prometheus grafana`.
 - Recuerda que algunas series solo se mueven tras generar predicciones reales.
