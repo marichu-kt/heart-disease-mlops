@@ -853,13 +853,13 @@ dd {
 
 .appFooter {
   width: min(1440px, calc(100% - 48px));
-  margin: 0 auto;
-  padding: 0 0 30px;
-}
-
-.appFooter p {
-  margin: 0;
+  margin: 0 auto 32px;
   padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   color: var(--text-muted);
   background: var(--surface);
   border: 1px solid var(--border-subtle);
@@ -867,6 +867,40 @@ dd {
   box-shadow: var(--shadow-card);
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.appFooter div,
+.appFooter nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.appFooter strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.appFooter span::before {
+  content: "/";
+  margin-right: 10px;
+  color: var(--border);
+}
+
+.appFooter a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.appFooter a:hover {
+  text-decoration: underline;
+}
+
+.appFooter a:focus-visible {
+  box-shadow: var(--focus);
+  border-radius: 4px;
 }
 
 @media (max-width: 1240px) {
@@ -903,6 +937,11 @@ dd {
   .dashboardPage,
   .appFooter {
     width: min(100% - 32px, 760px);
+  }
+
+  .appFooter {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .fieldGrid {

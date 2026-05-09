@@ -343,10 +343,7 @@ function App() {
   const apiOnline = status?.status === "healthy";
   const activeModelVersion = versionInfo?.model_version || modelInfo?.version || status?.model_version || "No disponible";
   const activeAlgorithm = modelInfo?.algorithm || "StandardScaler + MLPClassifier";
-  const modelSummary =
-    modelInfo?.f2_score != null
-      ? `${activeAlgorithm} · F2 ${formatPercent(modelInfo.f2_score)} · threshold ${modelInfo.decision_threshold ?? "no disponible"}`
-      : `${activeAlgorithm} · threshold ${modelInfo?.decision_threshold ?? "no disponible"}`;
+  const modelSummary = activeAlgorithm;
   const diseasePercent = percentValue(probabilities.disease);
   const noDiseasePercent = percentValue(probabilities.noDisease);
   const nextTheme = theme === "dark" ? "light" : "dark";
@@ -466,7 +463,7 @@ function App() {
                 <button className="primaryButton" type="submit" disabled={loading || !requiredFieldsOk}>
                   {loading ? "Evaluando..." : "Evaluar riesgo"}
                 </button>
-                <span>{requiredFieldsOk ? "Formulario listo" : "Hay valores fuera de rango"}</span>
+                {!requiredFieldsOk && <span>Hay valores fuera de rango</span>}
               </div>
             </form>
           </section>
@@ -596,7 +593,27 @@ function App() {
       </div>
 
       <footer className="appFooter">
-        <p>Heart Disease MLOps · FastAPI · Prometheus · Grafana</p>
+        <div>
+          <strong>Heart Disease MLOps</strong>
+          <span>FastAPI</span>
+          <span>Prometheus</span>
+          <span>Grafana</span>
+        </div>
+        <nav aria-label="Contacto y enlaces del proyecto">
+          <a href="https://github.com/marichu-kt/heart-disease-mlops" target="_blank" rel="noreferrer">
+            Repositorio
+          </a>
+          <a href="mailto:marichu.private@proton.me">Email</a>
+          <a href="https://instagram.com/marichu_kt" target="_blank" rel="noreferrer">
+            Instagram
+          </a>
+          <a href="https://www.linkedin.com/in/mario-mart%C3%ADnez-62b14331b/" target="_blank" rel="noreferrer">
+            LinkedIn
+          </a>
+          <a href="https://github.com/marichu-kt" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        </nav>
       </footer>
     </main>
   );
