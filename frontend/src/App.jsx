@@ -343,6 +343,10 @@ function App() {
   const apiOnline = status?.status === "healthy";
   const activeModelVersion = versionInfo?.model_version || modelInfo?.version || status?.model_version || "No disponible";
   const activeAlgorithm = modelInfo?.algorithm || "StandardScaler + MLPClassifier";
+  const modelSummary =
+    modelInfo?.f2_score != null
+      ? `${activeAlgorithm} · F2 ${formatPercent(modelInfo.f2_score)} · threshold ${modelInfo.decision_threshold ?? "no disponible"}`
+      : `${activeAlgorithm} · threshold ${modelInfo?.decision_threshold ?? "no disponible"}`;
   const diseasePercent = percentValue(probabilities.disease);
   const noDiseasePercent = percentValue(probabilities.noDisease);
   const nextTheme = theme === "dark" ? "light" : "dark";
@@ -409,7 +413,7 @@ function App() {
           <SummaryCard
             label="Modelo activo"
             value={activeModelVersion}
-            detail={`${activeAlgorithm} · exactitud ${modelInfo?.accuracy != null ? formatPercent(modelInfo.accuracy) : "no disponible"}`}
+            detail={modelSummary}
           />
           <SummaryCard
             label="Última inferencia"
@@ -432,7 +436,7 @@ function App() {
                 <span className="cardEyebrow">Datos clínicos de entrada</span>
                 <h2 id="clinical-form-title">Formulario de evaluación</h2>
               </div>
-              <p>Los campos mantienen la codificación esperada por la API.</p>
+              <p>Introduce los valores clínicos y ejecuta la evaluación.</p>
             </div>
 
             <form className="clinicalForm" onSubmit={submitPrediction}>
@@ -451,8 +455,6 @@ function App() {
                   </div>
                 </fieldset>
               ))}
-
-              <p className="formNote">Las variables categóricas conservan la codificación del dataset original.</p>
 
               {error && (
                 <div className="errorBanner" role="alert">
@@ -594,7 +596,7 @@ function App() {
       </div>
 
       <footer className="appFooter">
-        <p>Resultado orientativo para uso académico. No sustituye una valoración médica profesional.</p>
+        <p>Heart Disease MLOps · FastAPI · Prometheus · Grafana</p>
       </footer>
     </main>
   );

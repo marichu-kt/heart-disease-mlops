@@ -16,7 +16,15 @@ Aplicación MLOps completa para predecir riesgo de enfermedad cardíaca a partir
 
 > Uso académico. Este sistema no sustituye una valoración médica real.
 
-## 1. Descripción General
+## Resumen Ejecutivo
+
+Heart Disease MLOps integra un dashboard React, una API FastAPI, un modelo neuronal MLP versionado, métricas Prometheus, dashboard Grafana, Docker Compose, tests y CI. La versión activa del modelo es `v4.2.0 — StandardScaler + Robust Calibrated MLPClassifier`.
+
+![Dashboard principal](docs/images/frontend-dashboard.png)
+
+La captura anterior muestra el panel principal de inferencia: estado de API, modelo `v4.2.0`, formulario clínico agrupado, resultado, probabilidades, riesgo, tiempo de inferencia y accesos técnicos.
+
+## 1. Qué Hace El Proyecto
 
 El proyecto expone un modelo de Machine Learning mediante una API FastAPI, permite hacer predicciones desde un frontend React moderno y publica métricas operativas para Prometheus y Grafana.
 
@@ -44,7 +52,7 @@ docker compose up --build
 4. Genera tráfico adicional para métricas:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
 
 5. Abre Swagger en http://localhost:8000/docs y prueba `POST /predict`.
@@ -136,6 +144,8 @@ flowchart LR
     Metrics --> Prometheus["Prometheus<br/>localhost:9090"]
     Prometheus --> Grafana["Grafana<br/>localhost:3001"]
 ```
+
+El flujo principal es: usuario -> frontend React -> API FastAPI -> modelo MLP versionado. En paralelo, FastAPI expone `/metrics`, Prometheus scrapea esas métricas y Grafana las visualiza en un dashboard operativo.
 
 ## 7. Flujo De Predicción
 
@@ -366,7 +376,7 @@ La variante calibrada mejora accuracy, precision y F1, pero reduce recall, F2 y 
 
 ![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
 
-## Métricas Y Fórmulas
+## Métricas del modelo
 
 Para interpretar el modelo se usan las siguientes cantidades:
 
@@ -375,23 +385,23 @@ Para interpretar el modelo se usan las siguientes cantidades:
 - `FP`: falso positivo, paciente sin enfermedad marcado como `Disease`.
 - `FN`: falso negativo, paciente con enfermedad marcado como `No Disease`.
 
-Fórmulas principales:
-
-$$Accuracy = \frac{TP + TN}{TP + TN + FP + FN}$$
-
-$$Precision = \frac{TP}{TP + FP}$$
-
-$$Recall = \frac{TP}{TP + FN}$$
-
-$$F1 = 2 \cdot \frac{Precision \cdot Recall}{Precision + Recall}$$
-
-$$F2 = 5 \cdot \frac{Precision \cdot Recall}{4 \cdot Precision + Recall}$$
+| Métrica | Fórmula | Qué responde |
+|---|---|---|
+| Accuracy | $Accuracy = \frac{TP + TN}{TP + TN + FP + FN}$ | Mide aciertos globales. |
+| Precision | $Precision = \frac{TP}{TP + FP}$ | De los casos marcados como enfermedad, cuántos realmente lo eran. |
+| Recall | $Recall = \frac{TP}{TP + FN}$ | De los enfermos reales, cuántos detectó el modelo. |
+| F1-score | $F1 = 2 \cdot \frac{Precision \cdot Recall}{Precision + Recall}$ | Equilibra precision y recall. |
+| F2-score | $F2 = 5 \cdot \frac{Precision \cdot Recall}{4 \cdot Precision + Recall}$ | Da más peso al recall que a precision. |
 
 Regla de decisión:
 
-$$P(Disease) \geq threshold \Rightarrow Disease$$
-
-$$P(Disease) < threshold \Rightarrow No\ Disease$$
+$$
+\hat{y} =
+\begin{cases}
+Disease & \text{si } P(Disease) \geq threshold \\
+No\ Disease & \text{si } P(Disease) < threshold
+\end{cases}
+$$
 
 Lectura sencilla:
 
@@ -402,19 +412,33 @@ Lectura sencilla:
 
 ## Por Qué No Usamos Solo Accuracy
 
-`Accuracy` puede ocultar errores importantes cuando una clase pesa más que otra o cuando el coste de los errores no es simétrico. En este caso, un falso negativo significa que un caso real de `Disease` se marcaría como `No Disease`, algo especialmente delicado en una demostración de riesgo clínico. Por eso se reportan también precision, recall, F1, F2, ROC-AUC, matriz de confusión y curvas.
+`Accuracy` puede ocultar errores importantes cuando una clase pesa más que otra o cuando el coste de los errores no es simétrico. En riesgo cardíaco, un falso negativo es más delicado que un falso positivo porque implica dejar pasar un caso real de `Disease`. Por eso se eligió v4.2.0 aunque no tenga la mayor accuracy: mantiene el modelo final como red neuronal, mejora recall/F2/ROC-AUC frente a v4.1 y reduce falsos negativos, aceptando más falsos positivos como trade-off documentado.
 
 ## Imágenes Técnicas Del Modelo
 
 Estas imágenes se generan con `python backend/train_model.py` y están incluidas para defender el entrenamiento:
 
+La matriz de confusión resume aciertos y errores del modelo v4.2: `TN=16`, `FP=14`, `FN=1`, `TP=23`. La versión final reduce falsos negativos frente a v4.1, aunque acepta más falsos positivos como trade-off.
+
+![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
+
+El gráfico de threshold muestra cómo cambian precision, recall, F1 y F2 al mover el umbral de decisión. El umbral `0.35` se eligió porque maximiza F2-score en el set de test.
+
+![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
+
+La curva ROC muestra la capacidad del modelo para separar clases a distintos umbrales. En v4.2 el ROC-AUC es `0.8806`.
+
 ![Curva ROC MLP v4.2](docs/images/roc_curve_mlp_v4_2.png)
+
+La curva Precision-Recall es especialmente útil cuando importa detectar positivos y entender el balance entre sensibilidad y falsos positivos.
 
 ![Curva Precision-Recall MLP v4.2](docs/images/precision_recall_curve_mlp_v4_2.png)
 
+La importancia por permutación estima cuánto cae F2-score al alterar una variable. Es una aproximación explicativa del modelo, no una afirmación de causalidad clínica.
+
 ![Importancia por permutación MLP v4.2](docs/images/feature_importance_mlp_v4_2.png)
 
-![Comparativa de modelos](docs/images/model_comparison_metrics.png)
+No se genera `docs/images/cv_metrics_boxplot.png` en esta iteración porque `models/evaluation_report.json` conserva resumen y mejores candidatos de validación cruzada, pero no métricas completas por fold/repetición para Accuracy, Precision, Recall, F1, F2 y ROC-AUC. Se deja como mejora futura para evitar un boxplot artificial.
 
 ## 13. Versionado Del Modelo
 
@@ -433,14 +457,16 @@ La API carga el modelo indicado por `models/model_metadata.json`. Si se añade u
 
 ## Comparativa V3 Vs V4.0 Vs V4.1 Vs V4.2
 
-| Versión | Modelo | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Comentario |
-|---|---|---:|---:|---:|---:|---:|---:|---|
-| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8871 | 0.8958 | Baseline fuerte no neuronal. |
-| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8696 | 0.8583 | Red neuronal con cero falsos negativos, pero 18 falsos positivos. |
-| v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | Red neuronal más equilibrada, con 10 falsos positivos y 2 falsos negativos. |
-| v4.2.0 | `StandardScaler + Robust Calibrated MLPClassifier` | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | Modelo neuronal activo; mejora recall, F2 y ROC-AUC frente a v4.1, pero aumenta falsos positivos. |
+| Versión | Modelo | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Threshold | Comentario |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8871 | 0.8958 | n/a | Baseline fuerte no neuronal. |
+| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8696 | 0.8583 | 0.35 | Red neuronal con cero falsos negativos, pero 18 falsos positivos. |
+| v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | 0.55 | Red neuronal más equilibrada, con 10 falsos positivos y 2 falsos negativos. |
+| v4.2.0 | `StandardScaler + Robust Calibrated MLPClassifier` | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.35 | Modelo neuronal activo; mejora recall, F2 y ROC-AUC frente a v4.1, reduce falsos negativos y acepta más falsos positivos como trade-off. |
 
 La comparación es intencionadamente transparente: v3 sigue siendo un baseline no neuronal fuerte y no se elimina. v4.1 sigue siendo mejor que v4.2 en accuracy, precision y F1. v4.2 se activa porque mantiene la entrega final como red neuronal MLP, usa una evaluación más robusta, mejora recall, F2 y ROC-AUC frente a v4.1 y documenta claramente el trade-off de falsos positivos.
+
+![Comparativa visual de modelos](docs/images/model_comparison_metrics.png)
 
 El detalle completo está en `models/evaluation_report.json`. El modelo v1 del taller se mantiene como referencia histórica en `models/heart_model_v1_logistic.joblib`.
 
@@ -585,7 +611,7 @@ python scripts/demo_requests.py
 Uso con parámetros:
 
 ```bash
-python scripts/demo_requests.py --api-url http://localhost:8000 --requests 25
+python scripts/demo_requests.py --api-url http://localhost:8000 --requests 500 --sleep 0.01
 ```
 
 El resumen por consola incluye:
@@ -640,8 +666,10 @@ docker compose up --build
 2. Genera tráfico real:
 
 ```bash
-python scripts/demo_requests.py --requests 25 --sleep 0.05
+python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
+
+Para capturas finales se usaron 500 peticiones con 0 errores, de forma que Prometheus y Grafana muestren series y paneles con datos suficientes.
 
 3. Abre targets:
 
@@ -712,7 +740,7 @@ Paneles incluidos y organizados por filas:
 Pasos recomendados:
 
 1. Levanta Docker Compose.
-2. Genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05`.
+2. Genera tráfico con `python scripts/demo_requests.py --requests 500 --sleep 0.01`.
 3. Entra en Grafana con las credenciales de demo local.
 4. Abre la carpeta `MLOps`.
 5. Abre `Heart Disease MLOps Observability`.
@@ -813,6 +841,7 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 |---|---|
 | Logo icono | `docs/images/logo-icon.png` |
 | Logo completo | `docs/images/logo-full.png` |
+| Frontend dashboard | `docs/images/frontend-dashboard.png` |
 | Frontend modo claro | `docs/images/frontend-light.png` |
 | Frontend modo oscuro | `docs/images/frontend-dark.png` |
 | Swagger | `docs/images/swagger.png` |
@@ -833,25 +862,37 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 
 ![Frontend claro](docs/images/frontend-light.png)
 
+El modo claro muestra el dashboard principal de inferencia con logo, modelo activo v4.2.0, resultado, probabilidades y formulario clínico agrupado.
+
 ### Frontend Oscuro
 
 ![Frontend oscuro](docs/images/frontend-dark.png)
+
+El modo oscuro conserva la misma estructura y contraste, útil para demostrar el toggle de tema guardado en `localStorage`.
 
 ### Swagger
 
 ![Swagger](docs/images/swagger.png)
 
+Swagger documenta los endpoints de sistema, modelo, predicción y monitorización, y permite probar `POST /predict` desde el navegador.
+
 ### Prometheus Targets
 
 ![Prometheus targets](docs/images/prometheus-targets.png)
+
+La pantalla de targets confirma que Prometheus scrapea correctamente el job `heart-api`.
 
 ### Prometheus Graph
 
 ![Prometheus graph](docs/images/prometheus-graph.png)
 
+La query mostrada resume predicciones por clase usando datos reales generados con `scripts/demo_requests.py`.
+
 ### Grafana
 
 ![Grafana dashboard](docs/images/grafana-dashboard.png)
+
+Grafana muestra la observabilidad operativa de la demo: API UP, total de predicciones, tasa de requests, latencias, errores y distribución por clase/riesgo.
 
 ### Matriz De Confusión V3
 

@@ -11,6 +11,7 @@ Capturas y recursos técnicos:
 
 - `frontend-light.png`
 - `frontend-dark.png`
+- `frontend-dashboard.png`
 - `swagger.png`
 - `prometheus-targets.png`
 - `prometheus-graph.png`
@@ -25,4 +26,12 @@ Capturas y recursos técnicos:
 - `threshold_metrics_mlp_v4_2.png`
 - `model_comparison_metrics.png`
 
-No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`. La matriz de confusión activa, curvas ROC/Precision-Recall, importancia por permutación, métricas por threshold y comparativa de modelos de la MLP v4.2 se regeneran con `python backend/train_model.py`.
+No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 500 --sleep 0.01` y captura las URLs documentadas en `README.md`. La matriz de confusión activa, curvas ROC/Precision-Recall, importancia por permutación, métricas por threshold y comparativa de modelos de la MLP v4.2 se regeneran con `python backend/train_model.py`.
+
+Para capturas finales de observabilidad usa preferentemente:
+
+```bash
+python scripts/demo_requests.py --requests 500 --sleep 0.01
+```
+
+No se incluye `cv_metrics_boxplot.png` porque el reporte actual no almacena métricas completas por fold/repetición suficientes para construir un boxplot real sin inventar datos.
