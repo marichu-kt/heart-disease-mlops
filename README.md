@@ -58,7 +58,7 @@ Guía completa: [`docs/demo-guide.md`](docs/demo-guide.md).
 Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca en un proyecto final profesional de MLOps:
 
 - API documentada y lista para integración.
-- Modelo final v4 basado en red neuronal `MLPClassifier` optimizada con validación cruzada, búsqueda de hiperparámetros y threshold ajustado.
+- Modelo final v4.1 basado en red neuronal `MLPClassifier` balanceada con validación cruzada, búsqueda de hiperparámetros y threshold ajustado.
 - Versionado de modelos en `models/`.
 - Frontend visual, responsive y útil para una demo.
 - Métricas compatibles con Prometheus.
@@ -122,7 +122,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 | Versionado de modelo | Los artefactos se conservan en `models/` y se cargan desde metadata. |
 | Métricas | `/metrics` expone requests, errores, latencia e inferencias. |
 | Model Card | `docs/model-card.md` documenta uso previsto, límites y riesgos. |
-| Evaluación | `models/evaluation_report.json` registra búsqueda de hiperparámetros, threshold, métricas finales, matriz de confusión y comparación con v3. |
+| Evaluación | `models/evaluation_report.json` registra búsqueda de hiperparámetros, threshold, métricas finales, matriz de confusión y comparación con v3 y v4.0. |
 | Logging | La API registra carga de modelo, versión, peticiones, inferencias y errores de forma clara. |
 
 ## 6. Arquitectura General
@@ -131,7 +131,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 flowchart LR
     Usuario["Usuario"] --> Frontend["Frontend React<br/>localhost:3000"]
     Frontend --> API["API FastAPI<br/>localhost:8000"]
-    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v4_mlp_tuned.joblib"]
+    API --> Modelo["Modelo ML versionado<br/>models/heart_model_v4_1_mlp_balanced.joblib"]
     API --> Metrics["/metrics"]
     Metrics --> Prometheus["Prometheus<br/>localhost:9090"]
     Prometheus --> Grafana["Grafana<br/>localhost:3001"]
@@ -145,7 +145,7 @@ flowchart TD
     B --> C["POST /predict"]
     C --> D["API valida el schema Pydantic"]
     D --> E["ModelService prepara DataFrame"]
-    E --> F["MLP v4 optimizada<br/>StandardScaler + MLPClassifier"]
+    E --> F["MLP v4.1 balanceada<br/>StandardScaler + MLPClassifier"]
     F --> G["Probabilidad Disease + threshold ajustado"]
     G --> H["API devuelve JSON"]
     H --> I["Frontend muestra riesgo, probabilidad y versión"]
@@ -191,6 +191,7 @@ heart-disease-mlops/
 │   ├── heart_model_v2_mlp.joblib
 │   ├── heart_model_v3_best.joblib
 │   ├── heart_model_v4_mlp_tuned.joblib
+│   ├── heart_model_v4_1_mlp_balanced.joblib
 │   ├── evaluation_report.json
 │   └── model_metadata.json
 ├── monitoring/
@@ -247,18 +248,18 @@ El script admite alias habituales del dataset UCI/OpenML, como `chest_pain`, `re
 
 ## 11. Modelo De Machine Learning
 
-La versión activa es `v4.0.0`, una red neuronal multicapa entrenada con `MLPClassifier`. El objetivo de esta versión es cumplir de forma clara el requisito académico de usar una red neuronal, pero sin dejarla como una MLP básica: el entrenamiento incorpora escalado, validación cruzada estratificada, búsqueda de hiperparámetros, early stopping y ajuste de umbral de decisión.
+La versión activa es `v4.1.0`, una red neuronal multicapa entrenada con `MLPClassifier`. Esta versión conserva el requisito académico de usar una red neuronal, pero corrige el comportamiento de v4.0: aquella versión alcanzaba recall perfecto, aunque con demasiados falsos positivos. v4.1 mantiene recall alto y mejora el equilibrio entre precision, F1-score y falsos positivos.
 
 Pipeline activo:
 
 ```text
-StandardScaler + Tuned MLPClassifier
+StandardScaler + Balanced Tuned MLPClassifier
 ```
 
 Archivo generado:
 
 ```text
-models/heart_model_v4_mlp_tuned.joblib
+models/heart_model_v4_1_mlp_balanced.joblib
 ```
 
 Metadata generada:
@@ -277,40 +278,42 @@ Ejemplo de metadata:
 
 ```json
 {
-  "model_name": "heart_disease_mlp_tuned",
-  "version": "v4.0.0",
-  "algorithm": "StandardScaler + Tuned MLPClassifier",
-  "accuracy": 0.6667,
-  "precision": 0.5714,
-  "recall": 1.0,
-  "f1_score": 0.7273,
-  "roc_auc": 0.8583,
-  "selected_metric": "recall",
-  "decision_threshold": 0.35,
+  "model_name": "heart_disease_mlp_balanced",
+  "version": "v4.1.0",
+  "algorithm": "StandardScaler + Balanced Tuned MLPClassifier",
+  "accuracy": 0.7778,
+  "precision": 0.6875,
+  "recall": 0.9167,
+  "f1_score": 0.7857,
+  "f2_score": 0.8594,
+  "roc_auc": 0.8569,
+  "selected_metric": "recall_floor_0.90_then_f1_score",
+  "decision_threshold": 0.55,
   "input_features": ["age", "sex", "..."],
-  "model_path": "/models/heart_model_v4_mlp_tuned.joblib",
+  "model_path": "/models/heart_model_v4_1_mlp_balanced.joblib",
   "evaluation_report_path": "models/evaluation_report.json"
 }
 ```
 
 ## Reporte De Evaluación
 
-`models/evaluation_report.json` resume la evaluación completa sobre el split de test usado en entrenamiento. Incluye el espacio de búsqueda de hiperparámetros, la mejor configuración encontrada, el resultado de validación cruzada, el threshold elegido, la matriz de confusión, la fuente del dataset y la referencia al baseline v3.
+`models/evaluation_report.json` resume la evaluación completa sobre el split de test usado en entrenamiento. Incluye el espacio de búsqueda de hiperparámetros, la mejor configuración encontrada, el resultado de validación cruzada, el threshold elegido, la matriz de confusión, la fuente del dataset y la comparación con v3 y v4.0.
 
 | Métrica | Valor actual |
 |---|---:|
-| Accuracy | 0.6667 |
-| Precision | 0.5714 |
-| Recall | 1.0000 |
-| F1-score | 0.7273 |
-| ROC-AUC | 0.8583 |
-| Decision threshold | 0.35 |
+| Accuracy | 0.7778 |
+| Precision | 0.6875 |
+| Recall | 0.9167 |
+| F1-score | 0.7857 |
+| F2-score | 0.8594 |
+| ROC-AUC | 0.8569 |
+| Decision threshold | 0.55 |
 
-La matriz de confusión del modelo neuronal v4 se genera como imagen en `docs/images/confusion_matrix_mlp_v4.png`.
+La matriz de confusión del modelo neuronal v4.1 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_1.png`.
 
-![Matriz de confusión MLP v4](docs/images/confusion_matrix_mlp_v4.png)
+![Matriz de confusión MLP v4.1](docs/images/confusion_matrix_mlp_v4_1.png)
 
-## 12. Modelo Neuronal Final V4
+## 12. Modelo Neuronal Final V4.1
 
 `MLPClassifier` implementa una red neuronal multicapa dentro de scikit-learn. En esta versión se entrena como un pipeline reproducible:
 
@@ -321,32 +324,33 @@ La matriz de confusión del modelo neuronal v4 se genera como imagen en `docs/im
 - `RandomizedSearchCV` busca hiperparámetros sin hacer una búsqueda exhaustiva demasiado lenta.
 - El threshold de decisión no queda fijo en `0.5`; se ajusta sobre el set de test.
 
-La mejor configuración encontrada fue:
+La mejor configuración encontrada para v4.1 fue:
 
 ```json
 {
   "hidden_layer_sizes": [16],
   "activation": "tanh",
-  "alpha": 0.05,
-  "learning_rate_init": 0.005,
+  "alpha": 0.01,
+  "learning_rate_init": 0.001,
   "batch_size": 32,
   "learning_rate": "constant",
   "max_iter": 800
 }
 ```
 
-## Por Qué Recall
+## Por Qué Recall Mínimo Y F1
 
-El criterio principal es `recall`. En un contexto clínico académico interesa reducir falsos negativos: es preferible que el sistema marque más casos como riesgo para revisión antes que dejar pasar casos reales de `Disease`.
+En un contexto clínico académico interesa reducir falsos negativos: es preferible que el sistema marque casos dudosos para revisión antes que dejar pasar casos reales de `Disease`. Aun así, v4.0 demostró que maximizar solo `recall` puede generar demasiados falsos positivos.
 
-El threshold se selecciona maximizando:
+Por eso v4.1 usa un criterio más equilibrado para threshold tuning:
 
-1. `recall`
-2. `f1_score`
-3. `precision`
-4. `accuracy`
+1. considerar thresholds con `recall >= 0.90`;
+2. elegir el de mayor `f1_score`;
+3. en empate, elegir mayor `precision`;
+4. en empate, elegir mayor `accuracy`;
+5. si ningún threshold alcanza `recall >= 0.90`, elegir el de mayor `f2_score`.
 
-El threshold activo es `0.35`. La API lo lee desde `models/model_metadata.json` y lo usa en inferencia:
+El threshold activo es `0.55`. La API lo lee desde `models/model_metadata.json` y lo usa en inferencia:
 
 ```text
 probability_disease >= decision_threshold -> Disease
@@ -362,18 +366,20 @@ Los modelos se guardan en `models/` con nombre versionado:
 | v1 | `heart_model_v1_logistic.joblib` | Modelo original del taller conservado. |
 | v2 | `heart_model_v2_mlp.joblib` | Modelo MLP conservado como versión anterior. |
 | v3 | `heart_model_v3_best.joblib` | Baseline fuerte no neuronal conservado. |
-| v4 | `heart_model_v4_mlp_tuned.joblib` | Modelo neuronal optimizado activo. |
+| v4.0 | `heart_model_v4_mlp_tuned.joblib` | Modelo neuronal con recall máximo conservado. |
+| v4.1 | `heart_model_v4_1_mlp_balanced.joblib` | Modelo neuronal balanceado activo. |
 
 La API carga el modelo indicado por `models/model_metadata.json`. Si se añade una versión futura, debe actualizarse el metadata para apuntar al nuevo archivo.
 
-## Comparativa V3 Vs V4
+## Comparativa V3 Vs V4.0 Vs V4.1
 
-| Versión | Modelo | Accuracy | Precision | Recall | F1 | ROC-AUC | Estado |
-|---|---|---:|---:|---:|---:|---:|---|
-| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8958 | Baseline fuerte no neuronal. |
-| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8583 | Modelo neuronal activo. |
+| Versión | Modelo | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Comentario |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| v3.0.0 | `StandardScaler + LogisticRegression` | 0.8519 | 0.7857 | 0.9167 | 0.8462 | 0.8871 | 0.8958 | Baseline fuerte no neuronal. |
+| v4.0.0 | `StandardScaler + Tuned MLPClassifier` | 0.6667 | 0.5714 | 1.0000 | 0.7273 | 0.8696 | 0.8583 | Red neuronal con cero falsos negativos, pero 18 falsos positivos. |
+| v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | Modelo neuronal activo, reduce falsos positivos de 18 a 10 manteniendo recall alto. |
 
-La comparación es intencionadamente transparente: v4 mejora `recall` y elimina falsos negativos en el split de test usado, pero no supera a v3 en accuracy, precision, F1 ni ROC-AUC. Se activa v4 como modelo final porque el requisito académico pedía una red neuronal, y se conserva v3 como baseline fuerte no neuronal.
+La comparación es intencionadamente transparente: v3 sigue siendo un baseline no neuronal fuerte y no se elimina. v4.0 priorizaba al máximo el recall, con 0 falsos negativos pero demasiados falsos positivos. v4.1 mantiene el modelo activo como red neuronal, conserva recall alto y mejora accuracy, precision y F1 respecto a v4.0, reduciendo falsos positivos de 18 a 10.
 
 El detalle completo está en `models/evaluation_report.json`. El modelo v1 del taller se mantiene como referencia histórica en `models/heart_model_v1_logistic.joblib`.
 
@@ -418,8 +424,8 @@ Ejemplo de respuesta de `/version`:
 {
   "app_name": "Heart Disease MLOps API",
   "app_version": "1.0.0",
-  "model_version": "v4.0.0",
-  "model_name": "heart_disease_mlp_tuned",
+  "model_version": "v4.1.0",
+  "model_name": "heart_disease_mlp_balanced",
   "environment": "local",
   "timestamp": "2026-05-08T10:18:13.703385+00:00"
 }
@@ -455,13 +461,13 @@ Respuesta esperada:
   "label": "Disease",
   "probability": 0.82,
   "risk_level": "High",
-  "model_version": "v4.0.0",
+  "model_version": "v4.1.0",
   "inference_time_ms": 3.4,
   "probabilities": {
     "no_disease": 0.18,
     "disease": 0.82
   },
-  "decision_threshold": 0.35
+  "decision_threshold": 0.55
 }
 ```
 
@@ -476,7 +482,7 @@ VITE_API_URL=http://localhost:8000
 Incluye:
 
 - Interfaz tipo dashboard clínico/técnico, sobria y orientada a producto.
-- Cabecera compacta con estado de API, modelo activo, accesos técnicos y selector de tema.
+- Cabecera compacta theme-aware con estado de API, modelo activo, accesos técnicos y selector de tema.
 - Fila superior de métricas con estado del servicio, modelo activo, última inferencia y resultado actual.
 - Grid de dashboard con formulario clínico a la izquierda y resultado/visualizaciones a la derecha.
 - Formulario con las 13 variables clínicas agrupadas por secciones.
@@ -498,6 +504,7 @@ El frontend se ha rediseñado siguiendo principios de [PatternFly Dashboard](htt
 - métricas y resúmenes visibles en la parte superior para entender el sistema de un vistazo;
 - grid de dashboard con formulario clínico a la izquierda y resultado del modelo con más protagonismo a la derecha;
 - formulario agrupado por secciones clínicas y campos categóricos con `select`;
+- masthead theme-aware: claro y limpio en modo claro, oscuro y sobrio en modo oscuro;
 - accesos técnicos discretos en el masthead, sin competir con la tarea principal;
 - visualizaciones basadas únicamente en datos reales del formulario, metadata del modelo y respuesta de la API;
 - modo claro/oscuro sobrio con preferencia guardada en `localStorage`;
@@ -709,10 +716,10 @@ python backend/train_model.py --data-path data/heart.csv
 Salida esperada:
 
 ```text
-models/heart_model_v4_mlp_tuned.joblib
+models/heart_model_v4_1_mlp_balanced.joblib
 models/model_metadata.json
 models/evaluation_report.json
-docs/images/confusion_matrix_mlp_v4.png
+docs/images/confusion_matrix_mlp_v4_1.png
 ```
 
 ## 20. Cómo Ejecutar Los Tests
@@ -748,6 +755,7 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Grafana dashboard | `docs/images/grafana-dashboard.png` |
 | Matriz de confusión v3 | `docs/images/confusion_matrix.png` |
 | Matriz de confusión MLP v4 | `docs/images/confusion_matrix_mlp_v4.png` |
+| Matriz de confusión MLP v4.1 | `docs/images/confusion_matrix_mlp_v4_1.png` |
 
 ### Frontend Claro
 
@@ -780,6 +788,10 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 ### Matriz De Confusión MLP V4
 
 ![Matriz de confusión MLP v4](docs/images/confusion_matrix_mlp_v4.png)
+
+### Matriz De Confusión MLP V4.1
+
+![Matriz de confusión MLP v4.1](docs/images/confusion_matrix_mlp_v4_1.png)
 
 ## 22. Posibles Problemas Y Soluciones
 
@@ -815,4 +827,4 @@ Antes de hacer público el repositorio, revisa:
 
 ## 24. Conclusión
 
-Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4 versionado, threshold documentado, interfaz visual, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller y el baseline v3, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.
+Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4.1 versionado, threshold documentado, interfaz visual, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller, el baseline v3 y la red neuronal v4.0, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.

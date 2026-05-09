@@ -128,13 +128,13 @@ class PredictionResponse(BaseModel):
                 "label": "Disease",
                 "probability": 0.82,
                 "risk_level": "High",
-                "model_version": "v4.0.0",
+                "model_version": "v4.1.0",
                 "inference_time_ms": 4.7,
                 "probabilities": {
                     "no_disease": 0.18,
                     "disease": 0.82,
                 },
-                "decision_threshold": 0.35,
+                "decision_threshold": 0.55,
             }
         }
     }
@@ -180,6 +180,10 @@ class ModelInfoResponse(BaseModel):
     precision: Optional[float] = Field(None, description="Precisión registrada durante la evaluación del modelo.")
     recall: Optional[float] = Field(None, description="Recall registrado durante la evaluación del modelo.")
     f1_score: Optional[float] = Field(None, description="F1-score registrado durante la evaluación del modelo.")
+    f2_score: Optional[float] = Field(
+        None,
+        description="F2-score registrado durante la evaluación del modelo, ponderando más el recall que la precision.",
+    )
     roc_auc: Optional[float] = Field(None, description="ROC-AUC registrado cuando el modelo permite estimarlo.")
     selected_metric: Optional[str] = Field(None, description="Métrica principal usada para seleccionar el modelo activo.")
     decision_threshold: Optional[float] = Field(None, description="Umbral de decisión usado por el modelo activo.")

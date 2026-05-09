@@ -106,6 +106,7 @@ class ModelService:
             "precision": self.metadata.get("precision"),
             "recall": self.metadata.get("recall"),
             "f1_score": self.metadata.get("f1_score"),
+            "f2_score": self.metadata.get("f2_score"),
             "roc_auc": self.metadata.get("roc_auc"),
             "selected_metric": self.metadata.get("selected_metric"),
             "decision_threshold": self.decision_threshold,
