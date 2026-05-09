@@ -20,7 +20,13 @@ Aplicación MLOps completa para predecir riesgo de enfermedad cardíaca a partir
 
 Heart Disease MLOps integra un dashboard React, una API FastAPI, un modelo neuronal MLP versionado, métricas Prometheus, dashboard Grafana, Docker Compose, tests y CI. La versión activa del modelo es `v4.2.0 — StandardScaler + Robust Calibrated MLPClassifier`.
 
-![Dashboard principal](docs/images/frontend-dashboard.png)
+## Modo claro
+
+![Dashboard principal](docs/images/frontend-light.png)
+
+## Modo oscuro
+
+![Dashboard principal](docs/images/frontend-dark.png)
 
 La captura anterior muestra el panel principal de inferencia: estado de API, modelo `v4.2.0`, formulario clínico agrupado, resultado, probabilidades, riesgo, tiempo de inferencia y accesos técnicos.
 
