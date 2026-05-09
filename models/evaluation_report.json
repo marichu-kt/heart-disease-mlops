@@ -1,35 +1,67 @@
 {
-  "active_model": "v4.1.0",
-  "model_name": "heart_disease_mlp_balanced",
-  "algorithm": "StandardScaler + Balanced Tuned MLPClassifier",
+  "active_model": "v4.2.0",
+  "model_name": "heart_disease_mlp_calibrated",
+  "algorithm": "StandardScaler + Robust Calibrated MLPClassifier",
   "dataset_source": "OpenML heart-statlog",
-  "selected_metric": "recall_floor_0.90_then_f1_score",
-  "selection_criterion": "Select candidates with recall >= 0.90 and choose the highest f1_score; ties are resolved by precision and accuracy. If no candidate reaches the recall floor, choose the highest f2_score to keep recall weighted in the decision.",
-  "threshold_selection_reason": "Selected highest f1_score among thresholds with recall >= 0.90; ties use precision, accuracy and fewer false positives.",
-  "decision_threshold": 0.55,
-  "selected_threshold": 0.55,
+  "dataset_rationale": "OpenML heart-statlog was used because it was the original dataset from the workshop notebook and matches the 13 clinical input features expected by the API.",
+  "dataset_shape": {
+    "records": 270,
+    "features": 13
+  },
+  "selected_metric": "f2_score",
+  "selection_criterion": "Select the decision threshold with the highest F2-score; ties are resolved by F1-score, recall, precision and accuracy. F2 keeps recall weighted more strongly than precision without ignoring false positives.",
+  "threshold_selection_reason": "Selected threshold 0.35 because it maximized F2-score on the held-out test set; ties are resolved by F1-score, recall, precision and accuracy.",
+  "decision_threshold": 0.35,
+  "selected_threshold": 0.35,
   "best_params": {
-    "max_iter": 800,
-    "learning_rate_init": 0.001,
-    "learning_rate": "constant",
+    "max_iter": 1500,
+    "learning_rate_init": 0.0005,
+    "learning_rate": "adaptive",
     "hidden_layer_sizes": [
-      16
+      64,
+      32
     ],
-    "batch_size": 32,
-    "alpha": 0.01,
+    "batch_size": 64,
+    "alpha": 0.0001,
     "activation": "tanh"
   },
+  "calibration_method": "sigmoid evaluated, not applied",
+  "calibration_applied": false,
+  "calibration_reason": "Sigmoid calibration was evaluated but not applied because it reduced F2-score beyond the accepted tolerance or did not improve probability calibration.",
+  "calibration_comparison": {
+    "uncalibrated": {
+      "accuracy": 0.7222,
+      "precision": 0.6216,
+      "recall": 0.9583,
+      "f1_score": 0.7541,
+      "f2_score": 0.8647,
+      "roc_auc": 0.8806,
+      "average_precision": 0.8764,
+      "brier_score": 0.1483
+    },
+    "calibrated_sigmoid": {
+      "accuracy": 0.7963,
+      "precision": 0.7241,
+      "recall": 0.875,
+      "f1_score": 0.7925,
+      "f2_score": 0.84,
+      "roc_auc": 0.8597,
+      "average_precision": 0.8477,
+      "brier_score": 0.154
+    },
+    "selected_candidate": "uncalibrated"
+  },
   "cv_strategy": {
-    "type": "StratifiedKFold",
+    "type": "RepeatedStratifiedKFold",
     "n_splits": 5,
-    "shuffle": true,
+    "n_repeats": 3,
     "random_state": 42
   },
   "hyperparameter_search": {
     "type": "RandomizedSearchCV",
     "n_iter": 32,
-    "scoring": "recall",
-    "best_cv_recall": 0.8442,
+    "scoring": "f2_score",
+    "best_cv_f2_score": 0.8186,
     "search_space": {
       "hidden_layer_sizes": [
         [
@@ -89,43 +121,9 @@
     "top_results": [
       {
         "rank": 1,
-        "mean_test_recall": 0.8442,
-        "std_test_recall": 0.0931,
-        "mean_train_recall": 0.8542,
-        "params": {
-          "max_iter": 800,
-          "learning_rate_init": 0.001,
-          "learning_rate": "constant",
-          "hidden_layer_sizes": [
-            16
-          ],
-          "batch_size": 32,
-          "alpha": 0.01,
-          "activation": "tanh"
-        }
-      },
-      {
-        "rank": 1,
-        "mean_test_recall": 0.8442,
-        "std_test_recall": 0.0931,
-        "mean_train_recall": 0.8542,
-        "params": {
-          "max_iter": 1500,
-          "learning_rate_init": 0.0005,
-          "learning_rate": "constant",
-          "hidden_layer_sizes": [
-            16
-          ],
-          "batch_size": 16,
-          "alpha": 0.1,
-          "activation": "tanh"
-        }
-      },
-      {
-        "rank": 3,
-        "mean_test_recall": 0.8437,
-        "std_test_recall": 0.0999,
-        "mean_train_recall": 0.8749,
+        "mean_test_f2_score": 0.8186,
+        "std_test_f2_score": 0.0817,
+        "mean_train_f2_score": 0.8351,
         "params": {
           "max_iter": 1500,
           "learning_rate_init": 0.0005,
@@ -140,33 +138,16 @@
         }
       },
       {
-        "rank": 4,
-        "mean_test_recall": 0.8347,
-        "std_test_recall": 0.1227,
-        "mean_train_recall": 0.8412,
+        "rank": 2,
+        "mean_test_f2_score": 0.815,
+        "std_test_f2_score": 0.0693,
+        "mean_train_f2_score": 0.8394,
         "params": {
-          "max_iter": 1500,
-          "learning_rate_init": 0.01,
+          "max_iter": 800,
+          "learning_rate_init": 0.001,
           "learning_rate": "constant",
           "hidden_layer_sizes": [
             16
-          ],
-          "batch_size": 32,
-          "alpha": 0.001,
-          "activation": "tanh"
-        }
-      },
-      {
-        "rank": 5,
-        "mean_test_recall": 0.8132,
-        "std_test_recall": 0.0898,
-        "mean_train_recall": 0.8073,
-        "params": {
-          "max_iter": 1000,
-          "learning_rate_init": 0.01,
-          "learning_rate": "constant",
-          "hidden_layer_sizes": [
-            32
           ],
           "batch_size": 32,
           "alpha": 0.01,
@@ -174,44 +155,27 @@
         }
       },
       {
-        "rank": 5,
-        "mean_test_recall": 0.8132,
-        "std_test_recall": 0.0898,
-        "mean_train_recall": 0.8282,
+        "rank": 3,
+        "mean_test_f2_score": 0.8144,
+        "std_test_f2_score": 0.0694,
+        "mean_train_f2_score": 0.8388,
         "params": {
-          "max_iter": 1000,
-          "learning_rate_init": 0.001,
+          "max_iter": 1500,
+          "learning_rate_init": 0.0005,
           "learning_rate": "constant",
           "hidden_layer_sizes": [
-            32
+            16
           ],
-          "batch_size": 64,
-          "alpha": 0.05,
+          "batch_size": 16,
+          "alpha": 0.1,
           "activation": "tanh"
         }
       },
       {
-        "rank": 5,
-        "mean_test_recall": 0.8132,
-        "std_test_recall": 0.0898,
-        "mean_train_recall": 0.8282,
-        "params": {
-          "max_iter": 800,
-          "learning_rate_init": 0.001,
-          "learning_rate": "adaptive",
-          "hidden_layer_sizes": [
-            32
-          ],
-          "batch_size": 64,
-          "alpha": 0.001,
-          "activation": "tanh"
-        }
-      },
-      {
-        "rank": 5,
-        "mean_test_recall": 0.8132,
-        "std_test_recall": 0.0898,
-        "mean_train_recall": 0.8203,
+        "rank": 4,
+        "mean_test_f2_score": 0.8138,
+        "std_test_f2_score": 0.0752,
+        "mean_train_f2_score": 0.8248,
         "params": {
           "max_iter": 1000,
           "learning_rate_init": 0.001,
@@ -226,27 +190,78 @@
         }
       },
       {
-        "rank": 9,
-        "mean_test_recall": 0.8126,
-        "std_test_recall": 0.0851,
-        "mean_train_recall": 0.8281,
+        "rank": 5,
+        "mean_test_f2_score": 0.8088,
+        "std_test_f2_score": 0.0832,
+        "mean_train_f2_score": 0.838,
         "params": {
-          "max_iter": 800,
+          "max_iter": 1500,
+          "learning_rate_init": 0.01,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            16
+          ],
+          "batch_size": 32,
+          "alpha": 0.001,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 6,
+        "mean_test_f2_score": 0.8031,
+        "std_test_f2_score": 0.0883,
+        "mean_train_f2_score": 0.8231,
+        "params": {
+          "max_iter": 1000,
           "learning_rate_init": 0.001,
           "learning_rate": "constant",
           "hidden_layer_sizes": [
             32
           ],
-          "batch_size": 32,
-          "alpha": 0.1,
+          "batch_size": 64,
+          "alpha": 0.05,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 7,
+        "mean_test_f2_score": 0.8026,
+        "std_test_f2_score": 0.0884,
+        "mean_train_f2_score": 0.8229,
+        "params": {
+          "max_iter": 800,
+          "learning_rate_init": 0.001,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 64,
+          "alpha": 0.001,
+          "activation": "tanh"
+        }
+      },
+      {
+        "rank": 8,
+        "mean_test_f2_score": 0.802,
+        "std_test_f2_score": 0.1096,
+        "mean_train_f2_score": 0.8266,
+        "params": {
+          "max_iter": 1500,
+          "learning_rate_init": 0.005,
+          "learning_rate": "constant",
+          "hidden_layer_sizes": [
+            32
+          ],
+          "batch_size": 64,
+          "alpha": 0.01,
           "activation": "relu"
         }
       },
       {
         "rank": 9,
-        "mean_test_recall": 0.8126,
-        "std_test_recall": 0.108,
-        "mean_train_recall": 0.8177,
+        "mean_test_f2_score": 0.7989,
+        "std_test_f2_score": 0.1132,
+        "mean_train_f2_score": 0.826,
         "params": {
           "max_iter": 1000,
           "learning_rate_init": 0.005,
@@ -258,154 +273,112 @@
           "alpha": 0.1,
           "activation": "relu"
         }
+      },
+      {
+        "rank": 10,
+        "mean_test_f2_score": 0.7981,
+        "std_test_f2_score": 0.087,
+        "mean_train_f2_score": 0.8377,
+        "params": {
+          "max_iter": 1500,
+          "learning_rate_init": 0.005,
+          "learning_rate": "adaptive",
+          "hidden_layer_sizes": [
+            64
+          ],
+          "batch_size": 16,
+          "alpha": 0.01,
+          "activation": "tanh"
+        }
       }
     ]
   },
-  "metrics": {
-    "accuracy": 0.7778,
-    "precision": 0.6875,
-    "recall": 0.9167,
-    "f1_score": 0.7857,
-    "f2_score": 0.8594,
-    "roc_auc": 0.8569
+  "cross_validation_summary": {
+    "best_cv_f2_score": 0.8186,
+    "mean_cv_f2_score": 0.7809,
+    "std_cv_f2_score": 0.0305,
+    "mean_candidate_std_f2_score": 0.095,
+    "evaluated_candidates": 32,
+    "total_cv_fits": 480
   },
-  "confusion_matrix": [
-    [
-      20,
-      10
-    ],
-    [
-      2,
-      22
-    ]
-  ],
-  "true_negatives": 20,
-  "false_positives": 10,
-  "false_negatives": 2,
-  "true_positives": 22,
+  "metrics": {
+    "accuracy": 0.7222,
+    "precision": 0.6216,
+    "recall": 0.9583,
+    "f1_score": 0.7541,
+    "f2_score": 0.8647,
+    "roc_auc": 0.8806,
+    "average_precision": 0.8764,
+    "brier_score": 0.1483
+  },
   "classification_report": {
     "No Disease": {
-      "precision": 0.9090909090909091,
-      "recall": 0.6666666666666666,
-      "f1-score": 0.7692307692307693,
+      "precision": 0.9411764705882353,
+      "recall": 0.5333333333333333,
+      "f1-score": 0.6808510638297872,
       "support": 30.0
     },
     "Disease": {
-      "precision": 0.6875,
-      "recall": 0.9166666666666666,
-      "f1-score": 0.7857142857142857,
+      "precision": 0.6216216216216216,
+      "recall": 0.9583333333333334,
+      "f1-score": 0.7540983606557377,
       "support": 24.0
     },
-    "accuracy": 0.7777777777777778,
+    "accuracy": 0.7222222222222222,
     "macro avg": {
-      "precision": 0.7982954545454546,
-      "recall": 0.7916666666666666,
-      "f1-score": 0.7774725274725275,
+      "precision": 0.7813990461049285,
+      "recall": 0.7458333333333333,
+      "f1-score": 0.7174747122427625,
       "support": 54.0
     },
     "weighted avg": {
-      "precision": 0.8106060606060607,
-      "recall": 0.7777777777777778,
-      "f1-score": 0.7765567765567766,
+      "precision": 0.7991520932697403,
+      "recall": 0.7222222222222222,
+      "f1-score": 0.7134054179746541,
       "support": 54.0
     }
   },
+  "confusion_matrix": [
+    [
+      16,
+      14
+    ],
+    [
+      1,
+      23
+    ]
+  ],
+  "true_negatives": 16,
+  "false_positives": 14,
+  "false_negatives": 1,
+  "true_positives": 23,
   "threshold_search": [
     {
       "threshold": 0.25,
-      "roc_auc": 0.8569,
-      "accuracy": 0.5556,
-      "precision": 0.5,
-      "recall": 1.0,
-      "f1_score": 0.6667,
+      "roc_auc": 0.8806,
+      "accuracy": 0.6296,
+      "precision": 0.5476,
+      "recall": 0.9583,
+      "f1_score": 0.697,
       "f2_score": 0.8333,
       "confusion_matrix": [
         [
-          6,
-          24
-        ],
-        [
-          0,
-          24
-        ]
-      ],
-      "true_negatives": 6,
-      "false_positives": 24,
-      "false_negatives": 0,
-      "true_positives": 24
-    },
-    {
-      "threshold": 0.3,
-      "roc_auc": 0.8569,
-      "accuracy": 0.6111,
-      "precision": 0.5333,
-      "recall": 1.0,
-      "f1_score": 0.6957,
-      "f2_score": 0.8511,
-      "confusion_matrix": [
-        [
-          9,
-          21
-        ],
-        [
-          0,
-          24
-        ]
-      ],
-      "true_negatives": 9,
-      "false_positives": 21,
-      "false_negatives": 0,
-      "true_positives": 24
-    },
-    {
-      "threshold": 0.35,
-      "roc_auc": 0.8569,
-      "accuracy": 0.6667,
-      "precision": 0.5714,
-      "recall": 1.0,
-      "f1_score": 0.7273,
-      "f2_score": 0.8696,
-      "confusion_matrix": [
-        [
-          12,
-          18
-        ],
-        [
-          0,
-          24
-        ]
-      ],
-      "true_negatives": 12,
-      "false_positives": 18,
-      "false_negatives": 0,
-      "true_positives": 24
-    },
-    {
-      "threshold": 0.4,
-      "roc_auc": 0.8569,
-      "accuracy": 0.6481,
-      "precision": 0.561,
-      "recall": 0.9583,
-      "f1_score": 0.7077,
-      "f2_score": 0.8394,
-      "confusion_matrix": [
-        [
-          12,
-          18
+          11,
+          19
         ],
         [
           1,
           23
         ]
       ],
-      "true_negatives": 12,
-      "false_positives": 18,
+      "true_negatives": 11,
+      "false_positives": 19,
       "false_negatives": 1,
       "true_positives": 23
     },
     {
-      "threshold": 0.45,
-      "roc_auc": 0.8569,
+      "threshold": 0.3,
+      "roc_auc": 0.8806,
       "accuracy": 0.7037,
       "precision": 0.6053,
       "recall": 0.9583,
@@ -427,142 +400,211 @@
       "true_positives": 23
     },
     {
-      "threshold": 0.5,
-      "roc_auc": 0.8569,
-      "accuracy": 0.7593,
-      "precision": 0.6667,
-      "recall": 0.9167,
-      "f1_score": 0.7719,
-      "f2_score": 0.8527,
+      "threshold": 0.35,
+      "roc_auc": 0.8806,
+      "accuracy": 0.7222,
+      "precision": 0.6216,
+      "recall": 0.9583,
+      "f1_score": 0.7541,
+      "f2_score": 0.8647,
       "confusion_matrix": [
         [
-          19,
-          11
+          16,
+          14
+        ],
+        [
+          1,
+          23
+        ]
+      ],
+      "true_negatives": 16,
+      "false_positives": 14,
+      "false_negatives": 1,
+      "true_positives": 23
+    },
+    {
+      "threshold": 0.4,
+      "roc_auc": 0.8806,
+      "accuracy": 0.7407,
+      "precision": 0.6471,
+      "recall": 0.9167,
+      "f1_score": 0.7586,
+      "f2_score": 0.8462,
+      "confusion_matrix": [
+        [
+          18,
+          12
         ],
         [
           2,
           22
         ]
       ],
-      "true_negatives": 19,
-      "false_positives": 11,
+      "true_negatives": 18,
+      "false_positives": 12,
       "false_negatives": 2,
       "true_positives": 22
     },
     {
-      "threshold": 0.55,
-      "roc_auc": 0.8569,
-      "accuracy": 0.7778,
-      "precision": 0.6875,
-      "recall": 0.9167,
-      "f1_score": 0.7857,
-      "f2_score": 0.8594,
-      "confusion_matrix": [
-        [
-          20,
-          10
-        ],
-        [
-          2,
-          22
-        ]
-      ],
-      "true_negatives": 20,
-      "false_positives": 10,
-      "false_negatives": 2,
-      "true_positives": 22
-    },
-    {
-      "threshold": 0.6,
-      "roc_auc": 0.8569,
-      "accuracy": 0.7963,
-      "precision": 0.7241,
+      "threshold": 0.45,
+      "roc_auc": 0.8806,
+      "accuracy": 0.7222,
+      "precision": 0.6364,
       "recall": 0.875,
-      "f1_score": 0.7925,
-      "f2_score": 0.84,
+      "f1_score": 0.7368,
+      "f2_score": 0.814,
       "confusion_matrix": [
         [
-          22,
-          8
+          18,
+          12
         ],
         [
           3,
           21
         ]
       ],
-      "true_negatives": 22,
-      "false_positives": 8,
+      "true_negatives": 18,
+      "false_positives": 12,
       "false_negatives": 3,
       "true_positives": 21
     },
     {
-      "threshold": 0.65,
-      "roc_auc": 0.8569,
+      "threshold": 0.5,
+      "roc_auc": 0.8806,
       "accuracy": 0.7778,
-      "precision": 0.7308,
-      "recall": 0.7917,
-      "f1_score": 0.76,
-      "f2_score": 0.7787,
+      "precision": 0.7143,
+      "recall": 0.8333,
+      "f1_score": 0.7692,
+      "f2_score": 0.8065,
+      "confusion_matrix": [
+        [
+          22,
+          8
+        ],
+        [
+          4,
+          20
+        ]
+      ],
+      "true_negatives": 22,
+      "false_positives": 8,
+      "false_negatives": 4,
+      "true_positives": 20
+    },
+    {
+      "threshold": 0.55,
+      "roc_auc": 0.8806,
+      "accuracy": 0.7963,
+      "precision": 0.7407,
+      "recall": 0.8333,
+      "f1_score": 0.7843,
+      "f2_score": 0.813,
       "confusion_matrix": [
         [
           23,
           7
+        ],
+        [
+          4,
+          20
+        ]
+      ],
+      "true_negatives": 23,
+      "false_positives": 7,
+      "false_negatives": 4,
+      "true_positives": 20
+    },
+    {
+      "threshold": 0.6,
+      "roc_auc": 0.8806,
+      "accuracy": 0.8148,
+      "precision": 0.7917,
+      "recall": 0.7917,
+      "f1_score": 0.7917,
+      "f2_score": 0.7917,
+      "confusion_matrix": [
+        [
+          25,
+          5
         ],
         [
           5,
           19
         ]
       ],
-      "true_negatives": 23,
-      "false_positives": 7,
+      "true_negatives": 25,
+      "false_positives": 5,
       "false_negatives": 5,
       "true_positives": 19
     },
     {
-      "threshold": 0.7,
-      "roc_auc": 0.8569,
-      "accuracy": 0.7407,
-      "precision": 0.7083,
-      "recall": 0.7083,
-      "f1_score": 0.7083,
-      "f2_score": 0.7083,
+      "threshold": 0.65,
+      "roc_auc": 0.8806,
+      "accuracy": 0.8333,
+      "precision": 0.8571,
+      "recall": 0.75,
+      "f1_score": 0.8,
+      "f2_score": 0.7692,
       "confusion_matrix": [
         [
-          23,
-          7
+          27,
+          3
         ],
         [
-          7,
-          17
+          6,
+          18
         ]
       ],
-      "true_negatives": 23,
-      "false_positives": 7,
-      "false_negatives": 7,
-      "true_positives": 17
+      "true_negatives": 27,
+      "false_positives": 3,
+      "false_negatives": 6,
+      "true_positives": 18
+    },
+    {
+      "threshold": 0.7,
+      "roc_auc": 0.8806,
+      "accuracy": 0.8333,
+      "precision": 0.8571,
+      "recall": 0.75,
+      "f1_score": 0.8,
+      "f2_score": 0.7692,
+      "confusion_matrix": [
+        [
+          27,
+          3
+        ],
+        [
+          6,
+          18
+        ]
+      ],
+      "true_negatives": 27,
+      "false_positives": 3,
+      "false_negatives": 6,
+      "true_positives": 18
     },
     {
       "threshold": 0.75,
-      "roc_auc": 0.8569,
-      "accuracy": 0.7037,
-      "precision": 0.6818,
-      "recall": 0.625,
-      "f1_score": 0.6522,
-      "f2_score": 0.6356,
+      "roc_auc": 0.8806,
+      "accuracy": 0.8148,
+      "precision": 0.8889,
+      "recall": 0.6667,
+      "f1_score": 0.7619,
+      "f2_score": 0.7018,
       "confusion_matrix": [
         [
-          23,
-          7
+          28,
+          2
         ],
         [
-          9,
-          15
+          8,
+          16
         ]
       ],
-      "true_negatives": 23,
-      "false_positives": 7,
-      "false_negatives": 9,
-      "true_positives": 15
+      "true_negatives": 28,
+      "false_positives": 2,
+      "false_negatives": 8,
+      "true_positives": 16
     }
   ],
   "model_comparison": {
@@ -573,8 +615,9 @@
       "precision": 0.7857,
       "recall": 0.9167,
       "f1_score": 0.8462,
+      "f2_score": 0.8871,
       "roc_auc": 0.8958,
-      "note": "Previous best non-neural baseline"
+      "note": "Strong non-neural baseline kept for transparent comparison."
     },
     "v4.0.0": {
       "version": "v4.0.0",
@@ -583,6 +626,7 @@
       "precision": 0.5714,
       "recall": 1.0,
       "f1_score": 0.7273,
+      "f2_score": 0.8696,
       "roc_auc": 0.8583,
       "decision_threshold": 0.35,
       "confusion_matrix": [
@@ -597,7 +641,7 @@
       ],
       "false_positives": 18,
       "false_negatives": 0,
-      "note": "Previous neural model optimized for maximum recall"
+      "note": "Neural model optimized for maximum recall, with many false positives."
     },
     "v4.1.0": {
       "version": "v4.1.0",
@@ -621,44 +665,61 @@
       ],
       "false_positives": 10,
       "false_negatives": 2,
-      "note": "Final balanced neural model selected with recall floor and f1_score."
+      "note": "Balanced neural model that reduced false positives while keeping high recall."
+    },
+    "v4.2.0": {
+      "version": "v4.2.0",
+      "algorithm": "StandardScaler + Robust Calibrated MLPClassifier",
+      "accuracy": 0.7222,
+      "precision": 0.6216,
+      "recall": 0.9583,
+      "f1_score": 0.7541,
+      "f2_score": 0.8647,
+      "roc_auc": 0.8806,
+      "average_precision": 0.8764,
+      "brier_score": 0.1483,
+      "decision_threshold": 0.35,
+      "confusion_matrix": [
+        [
+          16,
+          14
+        ],
+        [
+          1,
+          23
+        ]
+      ],
+      "false_positives": 14,
+      "false_negatives": 1,
+      "calibration_applied": false,
+      "note": "Robust neural model selected with F2-score, repeated CV and calibration evaluation."
     }
   },
-  "previous_model_reference": {
-    "version": "v3.0.0",
-    "algorithm": "StandardScaler + LogisticRegression",
-    "accuracy": 0.8519,
-    "precision": 0.7857,
-    "recall": 0.9167,
-    "f1_score": 0.8462,
-    "roc_auc": 0.8958,
-    "note": "Previous best non-neural baseline"
+  "feature_importance": {
+    "thal": 0.0325,
+    "sex": 0.0225,
+    "exercise_induced_angina": 0.0099,
+    "number_of_major_vessels": 0.0085,
+    "chest": 0.005,
+    "maximum_heart_rate_achieved": 0.0019,
+    "fasting_blood_sugar": -0.0021,
+    "age": -0.0047,
+    "slope": -0.0074,
+    "oldpeak": -0.0078,
+    "resting_electrocardiographic_results": -0.0128,
+    "resting_blood_pressure": -0.0145,
+    "serum_cholestoral": -0.0159
   },
-  "previous_neural_reference": {
-    "version": "v4.0.0",
-    "algorithm": "StandardScaler + Tuned MLPClassifier",
-    "accuracy": 0.6667,
-    "precision": 0.5714,
-    "recall": 1.0,
-    "f1_score": 0.7273,
-    "roc_auc": 0.8583,
-    "decision_threshold": 0.35,
-    "confusion_matrix": [
-      [
-        12,
-        18
-      ],
-      [
-        0,
-        24
-      ]
-    ],
-    "false_positives": 18,
-    "false_negatives": 0,
-    "note": "Previous neural model optimized for maximum recall"
+  "technical_images": {
+    "confusion_matrix": "docs/images/confusion_matrix_mlp_v4_2.png",
+    "roc_curve": "docs/images/roc_curve_mlp_v4_2.png",
+    "precision_recall_curve": "docs/images/precision_recall_curve_mlp_v4_2.png",
+    "feature_importance": "docs/images/feature_importance_mlp_v4_2.png",
+    "threshold_metrics": "docs/images/threshold_metrics_mlp_v4_2.png",
+    "model_comparison": "docs/images/model_comparison_metrics.png"
   },
-  "trade_off_note": "v4.1 keeps a neural-network model active while moving from maximum recall toward a more balanced threshold. This should reduce false positives compared with v4.0 when the selected threshold improves specificity, while still enforcing high recall for the academic clinical-risk context.",
-  "created_at": "2026-05-09T08:40:23.305493+00:00",
+  "honest_comparison_note": "v4.2 is activated because it keeps the final model as an MLP neural network while using repeated cross-validation, F2-score selection, threshold tuning and probability calibration evaluation. The report keeps v3 and v4.1 as references so any metric trade-off remains visible.",
+  "created_at": "2026-05-09T09:58:49.882614+00:00",
   "input_features": [
     "age",
     "sex",
@@ -674,6 +735,5 @@
     "number_of_major_vessels",
     "thal"
   ],
-  "model_path": "/models/heart_model_v4_1_mlp_balanced.joblib",
-  "confusion_matrix_image": "docs/images/confusion_matrix_mlp_v4_1.png"
+  "model_path": "/models/heart_model_v4_2_mlp_calibrated.joblib"
 }

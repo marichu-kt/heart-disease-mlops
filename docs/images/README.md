@@ -18,5 +18,11 @@ Capturas y recursos técnicos:
 - `confusion_matrix.png`
 - `confusion_matrix_mlp_v4.png`
 - `confusion_matrix_mlp_v4_1.png`
+- `confusion_matrix_mlp_v4_2.png`
+- `roc_curve_mlp_v4_2.png`
+- `precision_recall_curve_mlp_v4_2.png`
+- `feature_importance_mlp_v4_2.png`
+- `threshold_metrics_mlp_v4_2.png`
+- `model_comparison_metrics.png`
 
-No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`. La matriz de confusión activa de la MLP v4.1 se regenera con `python backend/train_model.py`.
+No subas capturas falsas ni pantallas mockeadas. Si necesitas regenerarlas, levanta el proyecto con `docker compose up --build`, genera tráfico con `python scripts/demo_requests.py --requests 25 --sleep 0.05` y captura las URLs documentadas en `README.md`. La matriz de confusión activa, curvas ROC/Precision-Recall, importancia por permutación, métricas por threshold y comparativa de modelos de la MLP v4.2 se regeneran con `python backend/train_model.py`.
