@@ -7,9 +7,23 @@
   --surface: #ffffff;
   --surface-muted: #f8fafc;
   --surface-strong: #eef2f6;
-  --masthead: #151b23;
-  --masthead-muted: #aeb7c2;
-  --masthead-text: #ffffff;
+  --masthead: #ffffff;
+  --masthead-muted: #647184;
+  --masthead-text: #17212f;
+  --masthead-border: #dfe5ed;
+  --masthead-control-bg: #f8fafc;
+  --masthead-control-border: #d4dce7;
+  --masthead-control-hover: #eef4fb;
+  --masthead-success-text: #1f6f2f;
+  --masthead-success-bg: #edf8ed;
+  --masthead-success-border: #b7dfb4;
+  --masthead-warning-text: #795600;
+  --masthead-warning-bg: #fff7df;
+  --masthead-warning-border: #f3d27b;
+  --toggle-track-bg: #e7edf4;
+  --toggle-track-border: #b8c3d1;
+  --toggle-thumb: #52606d;
+  --brand-shadow: 0 1px 2px rgba(21, 31, 42, 0.14);
   --text: #151f2a;
   --text-muted: #52606d;
   --text-subtle: #74808c;
@@ -46,6 +60,20 @@
   --masthead: #0c1118;
   --masthead-muted: #a8b2bf;
   --masthead-text: #f6f8fa;
+  --masthead-border: #202a36;
+  --masthead-control-bg: rgba(255, 255, 255, 0.035);
+  --masthead-control-border: rgba(255, 255, 255, 0.16);
+  --masthead-control-hover: rgba(255, 255, 255, 0.08);
+  --masthead-success-text: #dff4df;
+  --masthead-success-bg: rgba(62, 134, 53, 0.22);
+  --masthead-success-border: rgba(110, 198, 100, 0.36);
+  --masthead-warning-text: #fff0bf;
+  --masthead-warning-bg: rgba(240, 171, 0, 0.2);
+  --masthead-warning-border: rgba(245, 197, 66, 0.34);
+  --toggle-track-bg: rgba(255, 255, 255, 0.2);
+  --toggle-track-border: rgba(255, 255, 255, 0.34);
+  --toggle-thumb: var(--masthead-text);
+  --brand-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
   --text: #f3f7fb;
   --text-muted: #c1c9d2;
   --text-subtle: #93a0ad;
@@ -124,11 +152,11 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  min-height: 72px;
-  padding: 14px 32px;
+  min-height: 70px;
+  padding: 12px 32px;
   color: var(--masthead-text);
   background: var(--masthead);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--masthead-border);
   box-shadow: var(--shadow-soft);
 }
 
@@ -148,9 +176,9 @@ select:focus-visible {
   height: 42px;
   padding: 3px;
   background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--masthead-border);
   border-radius: 8px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--brand-shadow);
   overflow: hidden;
 }
 
@@ -207,20 +235,20 @@ select:focus-visible {
 .statusBadge {
   padding: 0 11px;
   color: var(--masthead-text);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--masthead-control-border);
+  background: var(--masthead-control-bg);
 }
 
 .statusOk {
-  color: #dff4df;
-  border-color: rgba(110, 198, 100, 0.36);
-  background: rgba(62, 134, 53, 0.22);
+  color: var(--masthead-success-text);
+  border-color: var(--masthead-success-border);
+  background: var(--masthead-success-bg);
 }
 
 .statusWarn {
-  color: #fff0bf;
-  border-color: rgba(245, 197, 66, 0.34);
-  background: rgba(240, 171, 0, 0.2);
+  color: var(--masthead-warning-text);
+  border-color: var(--masthead-warning-border);
+  background: var(--masthead-warning-bg);
 }
 
 .technicalLinks {
@@ -228,9 +256,9 @@ select:focus-visible {
   align-items: center;
   gap: 4px;
   padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--masthead-control-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--masthead-control-bg);
 }
 
 .technicalLinks a {
@@ -241,20 +269,20 @@ select:focus-visible {
 
 .technicalLinks a:hover {
   color: var(--masthead-text);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--masthead-control-hover);
 }
 
 .themeToggle {
   gap: 8px;
   padding: 0 12px 0 8px;
   color: var(--masthead-text);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: transparent;
+  border: 1px solid var(--masthead-control-border);
+  background: var(--masthead-control-bg);
   cursor: pointer;
 }
 
 .themeToggle:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--masthead-control-hover);
 }
 
 .themeToggle span {
@@ -262,8 +290,8 @@ select:focus-visible {
   width: 30px;
   height: 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: var(--toggle-track-bg);
+  border: 1px solid var(--toggle-track-border);
 }
 
 .themeToggle span::after {
@@ -274,7 +302,7 @@ select:focus-visible {
   width: 10px;
   height: 10px;
   border-radius: 999px;
-  background: var(--masthead-text);
+  background: var(--toggle-thumb);
 }
 
 [data-theme="dark"] .themeToggle span::after {

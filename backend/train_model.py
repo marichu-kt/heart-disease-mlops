@@ -15,6 +15,7 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
+    fbeta_score,
     f1_score,
     precision_score,
     recall_score,
@@ -32,19 +33,22 @@ MODEL_DIR = ROOT_DIR / "models"
 DOCS_IMAGES_DIR = ROOT_DIR / "docs" / "images"
 DEFAULT_DATASET_PATH = DATA_DIR / "heart.csv"
 
-MODEL_VERSION = "v4.0.0"
-MODEL_NAME = "heart_disease_mlp_tuned"
-MODEL_ALGORITHM = "StandardScaler + Tuned MLPClassifier"
-MODEL_FILENAME = "heart_model_v4_mlp_tuned.joblib"
+MODEL_VERSION = "v4.1.0"
+MODEL_NAME = "heart_disease_mlp_balanced"
+MODEL_ALGORITHM = "StandardScaler + Balanced Tuned MLPClassifier"
+MODEL_FILENAME = "heart_model_v4_1_mlp_balanced.joblib"
 EVALUATION_REPORT_FILENAME = "evaluation_report.json"
-CONFUSION_MATRIX_FILENAME = "confusion_matrix_mlp_v4.png"
+CONFUSION_MATRIX_FILENAME = "confusion_matrix_mlp_v4_1.png"
 
 RANDOM_STATE = 42
-SELECTED_METRIC = "recall"
-THRESHOLDS = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60]
+SEARCH_SCORING = "recall"
+SELECTED_METRIC = "recall_floor_0.90_then_f1_score"
+RECALL_FLOOR = 0.90
+THRESHOLDS = [0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]
 SELECTION_CRITERION = (
-    "Maximize recall to reduce false negatives in an academic clinical-risk context; "
-    "threshold ties are resolved by f1_score, precision and accuracy."
+    "Select candidates with recall >= 0.90 and choose the highest f1_score; "
+    "ties are resolved by precision and accuracy. If no candidate reaches the recall floor, "
+    "choose the highest f2_score to keep recall weighted in the decision."
 )
 PREVIOUS_MODEL_REFERENCE = {
     "version": "v3.0.0",
@@ -55,6 +59,20 @@ PREVIOUS_MODEL_REFERENCE = {
     "f1_score": 0.8462,
     "roc_auc": 0.8958,
     "note": "Previous best non-neural baseline",
+}
+PREVIOUS_NEURAL_REFERENCE = {
+    "version": "v4.0.0",
+    "algorithm": "StandardScaler + Tuned MLPClassifier",
+    "accuracy": 0.6667,
+    "precision": 0.5714,
+    "recall": 1.0,
+    "f1_score": 0.7273,
+    "roc_auc": 0.8583,
+    "decision_threshold": 0.35,
+    "confusion_matrix": [[12, 18], [0, 24]],
+    "false_positives": 18,
+    "false_negatives": 0,
+    "note": "Previous neural model optimized for maximum recall",
 }
 
 INPUT_FEATURES = [
@@ -193,7 +211,7 @@ def hyperparameter_space() -> Dict[str, list]:
     return {
         "classifier__hidden_layer_sizes": [(16,), (32,), (64,), (32, 16), (64, 32), (128, 64)],
         "classifier__activation": ["relu", "tanh"],
-        "classifier__alpha": [0.0001, 0.001, 0.01, 0.05],
+        "classifier__alpha": [0.0001, 0.001, 0.01, 0.05, 0.1],
         "classifier__learning_rate_init": [0.0005, 0.001, 0.005, 0.01],
         "classifier__batch_size": [16, 32, 64],
         "classifier__learning_rate": ["constant", "adaptive"],
@@ -211,7 +229,7 @@ def build_search(search_iterations: int) -> RandomizedSearchCV:
         estimator=build_pipeline(),
         param_distributions=parameter_space,
         n_iter=n_iter,
-        scoring=SELECTED_METRIC,
+        scoring=SEARCH_SCORING,
         cv=cv,
         n_jobs=-1,
         random_state=RANDOM_STATE,
@@ -230,28 +248,64 @@ def positive_class_probabilities(model: Any, X_test: pd.DataFrame) -> pd.Series:
 
 
 def metrics_from_predictions(y_true: pd.Series, predictions: pd.Series) -> Dict[str, Any]:
+    tn, fp, fn, tp = confusion_matrix(y_true, predictions).ravel()
     return {
         "accuracy": round(float(accuracy_score(y_true, predictions)), 4),
         "precision": round(float(precision_score(y_true, predictions, zero_division=0)), 4),
         "recall": round(float(recall_score(y_true, predictions, zero_division=0)), 4),
         "f1_score": round(float(f1_score(y_true, predictions, zero_division=0)), 4),
+        "f2_score": round(float(fbeta_score(y_true, predictions, beta=2, zero_division=0)), 4),
         "confusion_matrix": confusion_matrix(y_true, predictions).tolist(),
+        "true_negatives": int(tn),
+        "false_positives": int(fp),
+        "false_negatives": int(fn),
+        "true_positives": int(tp),
     }
 
 
-def threshold_metrics(y_true: pd.Series, probabilities: pd.Series, threshold: float) -> Dict[str, Any]:
+def threshold_metrics(
+    y_true: pd.Series,
+    probabilities: pd.Series,
+    threshold: float,
+    roc_auc: float,
+) -> Dict[str, Any]:
     predictions = (probabilities >= threshold).astype(int)
     metrics = metrics_from_predictions(y_true, predictions)
-    return {"threshold": threshold, **metrics}
+    return {"threshold": threshold, "roc_auc": roc_auc, **metrics}
 
 
-def threshold_score(result: Dict[str, Any]) -> Tuple[float, float, float, float]:
-    return (
-        result["recall"],
-        result["f1_score"],
-        result["precision"],
-        result["accuracy"],
+def select_threshold(threshold_search: list[Dict[str, Any]]) -> Tuple[Dict[str, Any], str]:
+    recall_candidates = [result for result in threshold_search if result["recall"] >= RECALL_FLOOR]
+    if recall_candidates:
+        selected = max(
+            recall_candidates,
+            key=lambda result: (
+                result["f1_score"],
+                result["precision"],
+                result["accuracy"],
+                -result["false_positives"],
+            ),
+        )
+        reason = (
+            f"Selected highest f1_score among thresholds with recall >= {RECALL_FLOOR:.2f}; "
+            "ties use precision, accuracy and fewer false positives."
+        )
+        return selected, reason
+
+    selected = max(
+        threshold_search,
+        key=lambda result: (
+            result["f2_score"],
+            result["recall"],
+            result["precision"],
+            result["accuracy"],
+        ),
     )
+    reason = (
+        f"No threshold reached recall >= {RECALL_FLOOR:.2f}; selected highest f2_score "
+        "to keep recall weighted more than precision."
+    )
+    return selected, reason
 
 
 def clean_best_params(params: Dict[str, Any]) -> Dict[str, Any]:
@@ -295,9 +349,9 @@ def cv_results_summary(search: RandomizedSearchCV, limit: int = 10) -> list[Dict
         rows.append(
             {
                 "rank": int(row["rank_test_score"]),
-                "mean_test_recall": round(float(row["mean_test_score"]), 4),
-                "std_test_recall": round(float(row["std_test_score"]), 4),
-                "mean_train_recall": round(float(row["mean_train_score"]), 4),
+                f"mean_test_{SEARCH_SCORING}": round(float(row["mean_test_score"]), 4),
+                f"std_test_{SEARCH_SCORING}": round(float(row["std_test_score"]), 4),
+                f"mean_train_{SEARCH_SCORING}": round(float(row["mean_train_score"]), 4),
                 "params": clean_best_params(row["params"]),
             }
         )
@@ -326,8 +380,8 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
     probabilities = positive_class_probabilities(best_model, X_test)
     roc_auc = round(float(roc_auc_score(y_test, probabilities)), 4)
 
-    threshold_search = [threshold_metrics(y_test, probabilities, threshold) for threshold in THRESHOLDS]
-    selected_threshold = max(threshold_search, key=threshold_score)
+    threshold_search = [threshold_metrics(y_test, probabilities, threshold, roc_auc) for threshold in THRESHOLDS]
+    selected_threshold, threshold_selection_reason = select_threshold(threshold_search)
     final_predictions = (probabilities >= selected_threshold["threshold"]).astype(int)
     final_metrics = metrics_from_predictions(y_test, final_predictions)
     final_metrics["roc_auc"] = roc_auc
@@ -348,7 +402,7 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
     save_confusion_matrix_image(
         final_metrics["confusion_matrix"],
         confusion_matrix_path,
-        "Matriz de confusión - MLP v4 optimizada",
+        "Matriz de confusión - MLP v4.1 balanceada",
     )
 
     metadata = {
@@ -359,6 +413,7 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
         "precision": final_metrics["precision"],
         "recall": final_metrics["recall"],
         "f1_score": final_metrics["f1_score"],
+        "f2_score": final_metrics["f2_score"],
         "roc_auc": final_metrics["roc_auc"],
         "selected_metric": SELECTED_METRIC,
         "decision_threshold": selected_threshold["threshold"],
@@ -380,7 +435,9 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
         "dataset_source": source,
         "selected_metric": SELECTED_METRIC,
         "selection_criterion": SELECTION_CRITERION,
+        "threshold_selection_reason": threshold_selection_reason,
         "decision_threshold": selected_threshold["threshold"],
+        "selected_threshold": selected_threshold["threshold"],
         "best_params": best_params,
         "cv_strategy": {
             "type": "StratifiedKFold",
@@ -391,8 +448,8 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
         "hyperparameter_search": {
             "type": "RandomizedSearchCV",
             "n_iter": search.n_iter,
-            "scoring": SELECTED_METRIC,
-            "best_cv_recall": round(float(search.best_score_), 4),
+            "scoring": SEARCH_SCORING,
+            f"best_cv_{SEARCH_SCORING}": round(float(search.best_score_), 4),
             "search_space": {
                 key.replace("classifier__", ""): [list(item) if isinstance(item, tuple) else item for item in value]
                 for key, value in hyperparameter_space().items()
@@ -404,12 +461,42 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
             "precision": final_metrics["precision"],
             "recall": final_metrics["recall"],
             "f1_score": final_metrics["f1_score"],
+            "f2_score": final_metrics["f2_score"],
             "roc_auc": final_metrics["roc_auc"],
         },
         "confusion_matrix": final_metrics["confusion_matrix"],
+        "true_negatives": final_metrics["true_negatives"],
+        "false_positives": final_metrics["false_positives"],
+        "false_negatives": final_metrics["false_negatives"],
+        "true_positives": final_metrics["true_positives"],
         "classification_report": classification,
         "threshold_search": threshold_search,
+        "model_comparison": {
+            "v3.0.0": PREVIOUS_MODEL_REFERENCE,
+            "v4.0.0": PREVIOUS_NEURAL_REFERENCE,
+            MODEL_VERSION: {
+                "version": MODEL_VERSION,
+                "algorithm": MODEL_ALGORITHM,
+                "accuracy": final_metrics["accuracy"],
+                "precision": final_metrics["precision"],
+                "recall": final_metrics["recall"],
+                "f1_score": final_metrics["f1_score"],
+                "f2_score": final_metrics["f2_score"],
+                "roc_auc": final_metrics["roc_auc"],
+                "decision_threshold": selected_threshold["threshold"],
+                "confusion_matrix": final_metrics["confusion_matrix"],
+                "false_positives": final_metrics["false_positives"],
+                "false_negatives": final_metrics["false_negatives"],
+                "note": "Final balanced neural model selected with recall floor and f1_score.",
+            },
+        },
         "previous_model_reference": PREVIOUS_MODEL_REFERENCE,
+        "previous_neural_reference": PREVIOUS_NEURAL_REFERENCE,
+        "trade_off_note": (
+            "v4.1 keeps a neural-network model active while moving from maximum recall toward a more balanced "
+            "threshold. This should reduce false positives compared with v4.0 when the selected threshold improves "
+            "specificity, while still enforcing high recall for the academic clinical-risk context."
+        ),
         "created_at": created_at,
         "input_features": INPUT_FEATURES,
         "model_path": f"/models/{MODEL_FILENAME}",
@@ -418,15 +505,17 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
     evaluation_report_path = MODEL_DIR / EVALUATION_REPORT_FILENAME
     evaluation_report_path.write_text(json.dumps(evaluation_report, indent=2), encoding="utf-8")
 
-    print("\nSelected neural network v4")
-    print(f"Best CV recall: {search.best_score_:.4f}")
+    print("\nSelected balanced neural network v4.1")
+    print(f"Best CV {SEARCH_SCORING}: {search.best_score_:.4f}")
     print(f"Best params: {best_params}")
     print(f"Decision threshold: {selected_threshold['threshold']}")
+    print(f"Threshold selection: {threshold_selection_reason}")
     print(
         f"Accuracy: {final_metrics['accuracy']:.4f} | "
         f"Precision: {final_metrics['precision']:.4f} | "
         f"Recall: {final_metrics['recall']:.4f} | "
         f"F1-score: {final_metrics['f1_score']:.4f} | "
+        f"F2-score: {final_metrics['f2_score']:.4f} | "
         f"ROC-AUC: {final_metrics['roc_auc']:.4f}"
     )
     print(f"Saved model to {model_path}")
@@ -437,7 +526,7 @@ def train(dataset_path: Optional[Path] = None, search_iterations: int = 32) -> d
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train the tuned Heart Disease MLP v4 model.")
+    parser = argparse.ArgumentParser(description="Train the balanced tuned Heart Disease MLP v4.1 model.")
     parser.add_argument("--data-path", type=Path, default=None, help="Optional CSV path. Defaults to data/heart.csv or OpenML.")
     parser.add_argument(
         "--search-iterations",

@@ -1,26 +1,27 @@
 {
-  "model_name": "heart_disease_mlp_tuned",
-  "version": "v4.0.0",
-  "algorithm": "StandardScaler + Tuned MLPClassifier",
-  "accuracy": 0.6667,
-  "precision": 0.5714,
-  "recall": 1.0,
-  "f1_score": 0.7273,
-  "roc_auc": 0.8583,
-  "selected_metric": "recall",
-  "decision_threshold": 0.35,
+  "model_name": "heart_disease_mlp_balanced",
+  "version": "v4.1.0",
+  "algorithm": "StandardScaler + Balanced Tuned MLPClassifier",
+  "accuracy": 0.7778,
+  "precision": 0.6875,
+  "recall": 0.9167,
+  "f1_score": 0.7857,
+  "f2_score": 0.8594,
+  "roc_auc": 0.8569,
+  "selected_metric": "recall_floor_0.90_then_f1_score",
+  "decision_threshold": 0.55,
   "best_params": {
     "max_iter": 800,
-    "learning_rate_init": 0.005,
+    "learning_rate_init": 0.001,
     "learning_rate": "constant",
     "hidden_layer_sizes": [
       16
     ],
     "batch_size": 32,
-    "alpha": 0.05,
+    "alpha": 0.01,
     "activation": "tanh"
   },
-  "created_at": "2026-05-08T18:59:19.226521+00:00",
+  "created_at": "2026-05-09T08:40:23.305493+00:00",
   "input_features": [
     "age",
     "sex",
@@ -36,8 +37,8 @@
     "number_of_major_vessels",
     "thal"
   ],
-  "model_path": "/models/heart_model_v4_mlp_tuned.joblib",
+  "model_path": "/models/heart_model_v4_1_mlp_balanced.joblib",
   "dataset_source": "OpenML heart-statlog",
   "evaluation_report_path": "models/evaluation_report.json",
-  "confusion_matrix_image": "docs/images/confusion_matrix_mlp_v4.png"
+  "confusion_matrix_image": "docs/images/confusion_matrix_mlp_v4_1.png"
 }
