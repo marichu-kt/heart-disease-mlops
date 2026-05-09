@@ -226,6 +226,10 @@ El ZIP base no incluye un archivo de dataset. Por eso el entrenamiento está pre
 2. Si se pasa `--data-path`, se usa el CSV indicado.
 3. Si no hay CSV local, se descarga `heart-statlog` desde OpenML, que es la fuente usada por el notebook del taller.
 
+Se utilizó OpenML `heart-statlog` porque era el dataset original del taller base. El notebook ya lo cargaba mediante `fetch_openml('heart-statlog')`, y las 13 variables clínicas del dataset coincidían con la estructura de entrada esperada por la API. Por eso se mantuvo como dataset principal para conservar compatibilidad, reproducibilidad y coherencia con el ejercicio original.
+
+El dataset contiene 270 registros de pacientes. Es suficiente para un proyecto académico y una demostración MLOps completa, pero su tamaño reducido se documenta como una limitación del modelo. En un caso real, la mejora más importante sería sustituirlo por un dataset mayor, trazable y compatible con las mismas 13 variables, por ejemplo colocándolo en `data/heart.csv`.
+
 Columnas esperadas:
 
 | Campo | Descripción |
