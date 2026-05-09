@@ -324,9 +324,7 @@ Ejemplo resumido de metadata:
 | Brier score | 0.1483 |
 | Decision threshold | 0.35 |
 
-La matriz de confusión del modelo neuronal v4.2 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_2.png`.
-
-![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
+La matriz de confusión del modelo neuronal v4.2 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_2.png` y se explica en la sección de imágenes técnicas para evitar repetir capturas en el documento.
 
 ## 12. Modelo Neuronal Final V4.2
 
@@ -372,9 +370,7 @@ La calibración se documenta de forma explícita:
 | Sin calibrar | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.1483 | Activa |
 | Sigmoid calibrada | 0.7963 | 0.7241 | 0.8750 | 0.7925 | 0.8400 | 0.8597 | 0.1540 | Evaluada, no aplicada |
 
-La variante calibrada mejora accuracy, precision y F1, pero reduce recall, F2 y ROC-AUC. Como el proyecto prioriza F2 para mantener sensibilidad en un contexto académico de riesgo, se conserva la red sin calibrar y se deja la decisión documentada.
-
-![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
+La variante calibrada mejora accuracy, precision y F1, pero reduce recall, F2 y ROC-AUC. Como el proyecto prioriza F2 para mantener sensibilidad en un contexto académico de riesgo, se conserva la red sin calibrar y se deja la decisión documentada. El gráfico de threshold se muestra una sola vez en la sección de imágenes técnicas.
 
 ## Métricas del modelo
 
@@ -858,17 +854,7 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Métricas por threshold MLP v4.2 | `docs/images/threshold_metrics_mlp_v4_2.png` |
 | Comparativa de modelos | `docs/images/model_comparison_metrics.png` |
 
-### Frontend Claro
-
-![Frontend claro](docs/images/frontend-light.png)
-
-El modo claro muestra el dashboard principal de inferencia con logo, modelo activo v4.2.0, resultado, probabilidades y formulario clínico agrupado.
-
-### Frontend Oscuro
-
-![Frontend oscuro](docs/images/frontend-dark.png)
-
-El modo oscuro conserva la misma estructura y contraste, útil para demostrar el toggle de tema guardado en `localStorage`.
+El README usa `frontend-dashboard.png` como captura principal para no repetir la misma pantalla varias veces. Las capturas `frontend-light.png` y `frontend-dark.png` quedan disponibles en `docs/images/` para demostrar el modo claro/oscuro cuando se prepare una presentación.
 
 ### Swagger
 
@@ -893,32 +879,6 @@ La query mostrada resume predicciones por clase usando datos reales generados co
 ![Grafana dashboard](docs/images/grafana-dashboard.png)
 
 Grafana muestra la observabilidad operativa de la demo: API UP, total de predicciones, tasa de requests, latencias, errores y distribución por clase/riesgo.
-
-### Matriz De Confusión V3
-
-![Matriz de confusión](docs/images/confusion_matrix.png)
-
-### Matriz De Confusión MLP V4
-
-![Matriz de confusión MLP v4](docs/images/confusion_matrix_mlp_v4.png)
-
-### Matriz De Confusión MLP V4.1
-
-![Matriz de confusión MLP v4.1](docs/images/confusion_matrix_mlp_v4_1.png)
-
-### Evaluación Técnica MLP V4.2
-
-![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
-
-![Curva ROC MLP v4.2](docs/images/roc_curve_mlp_v4_2.png)
-
-![Curva Precision-Recall MLP v4.2](docs/images/precision_recall_curve_mlp_v4_2.png)
-
-![Importancia por permutación MLP v4.2](docs/images/feature_importance_mlp_v4_2.png)
-
-![Métricas por threshold MLP v4.2](docs/images/threshold_metrics_mlp_v4_2.png)
-
-![Comparativa de modelos](docs/images/model_comparison_metrics.png)
 
 ## 22. Posibles Problemas Y Soluciones
 
