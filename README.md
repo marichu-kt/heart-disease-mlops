@@ -367,6 +367,8 @@ probability_disease >= decision_threshold -> Disease
 probability_disease < decision_threshold  -> No Disease
 ```
 
+Aunque un threshold cercano a `0.60` ofrece un comportamiento más equilibrado entre precision y recall, se descartó como umbral final porque reduce la sensibilidad del modelo. En este proyecto se prioriza detectar el mayor número posible de casos `Disease`, por lo que se eligió `0.35`: mantiene un recall más alto y maximiza F2-score, aceptando más falsos positivos como trade-off documentado.
+
 La calibración se documenta de forma explícita:
 
 | Variante | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Brier | Decisión |
@@ -425,6 +427,8 @@ La matriz de confusión resume aciertos y errores del modelo v4.2: `TN=16`, `FP=
 El gráfico de threshold muestra cómo cambian precision, recall, F1 y F2 al mover el umbral de decisión. El umbral `0.35` se eligió porque maximiza F2-score en el set de test.
 
 ![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
+
+En la gráfica se observa que a partir de thresholds más altos, como `0.60`, la precision mejora, pero el recall baja. Como F2-score da más peso al recall, el punto `0.35` resulta más adecuado para el objetivo del proyecto: reducir falsos negativos en una demo académica de riesgo cardíaco.
 
 La curva ROC muestra la capacidad del modelo para separar clases a distintos umbrales. En v4.2 el ROC-AUC es `0.8806`.
 
