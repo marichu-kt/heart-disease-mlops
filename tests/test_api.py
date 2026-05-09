@@ -36,14 +36,16 @@ def test_info_endpoint():
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["model_name"] == "heart_disease_mlp_balanced"
-    assert payload["version"] == "v4.1.0"
-    assert payload["algorithm"] == "StandardScaler + Balanced Tuned MLPClassifier"
+    assert payload["model_name"] == "heart_disease_mlp_calibrated"
+    assert payload["version"] == "v4.2.0"
+    assert payload["algorithm"] == "StandardScaler + Robust Calibrated MLPClassifier"
     assert "MLPClassifier" in payload["algorithm"]
-    assert payload["selected_metric"] == "recall_floor_0.90_then_f1_score"
+    assert payload["selected_metric"] == "f2_score"
     assert payload["decision_threshold"] is not None
     assert 0 < payload["decision_threshold"] < 1
     assert payload["f2_score"] is not None
+    assert payload["calibration_method"] is not None
+    assert payload["calibration_applied"] in [True, False]
     assert payload["recall"] >= 0.9
     assert payload["roc_auc"] is not None
     assert "age" in payload["input_features"]
@@ -57,8 +59,8 @@ def test_version_endpoint():
     payload = response.json()
     assert payload["app_name"] == "Heart Disease MLOps API"
     assert payload["app_version"] == "1.0.0"
-    assert payload["model_version"] == "v4.1.0"
-    assert payload["model_name"] == "heart_disease_mlp_balanced"
+    assert payload["model_version"] == "v4.2.0"
+    assert payload["model_name"] == "heart_disease_mlp_calibrated"
     assert payload["environment"] == "local"
     assert "timestamp" in payload
 
@@ -72,7 +74,7 @@ def test_predict_endpoint():
     assert payload["prediction"] in [0, 1]
     assert payload["label"] in ["Disease", "No Disease"]
     assert payload["risk_level"] in ["Low", "Medium", "High"]
-    assert payload["model_version"] == "v4.1.0"
+    assert payload["model_version"] == "v4.2.0"
     assert payload["probability"] is not None
     assert 0 <= payload["probability"] <= 1
     assert isinstance(payload["inference_time_ms"], float)
@@ -96,5 +98,5 @@ def test_metrics_endpoint():
     assert "heart_prediction_errors_total" in response.text
     assert "heart_predictions_by_class_total" in response.text
     assert "heart_model_info" in response.text
-    assert 'version="v4.1.0"' in response.text
+    assert 'version="v4.2.0"' in response.text
     assert "heart_api_up" in response.text

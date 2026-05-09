@@ -1,27 +1,32 @@
 {
-  "model_name": "heart_disease_mlp_balanced",
-  "version": "v4.1.0",
-  "algorithm": "StandardScaler + Balanced Tuned MLPClassifier",
-  "accuracy": 0.7778,
-  "precision": 0.6875,
-  "recall": 0.9167,
-  "f1_score": 0.7857,
-  "f2_score": 0.8594,
-  "roc_auc": 0.8569,
-  "selected_metric": "recall_floor_0.90_then_f1_score",
-  "decision_threshold": 0.55,
+  "model_name": "heart_disease_mlp_calibrated",
+  "version": "v4.2.0",
+  "algorithm": "StandardScaler + Robust Calibrated MLPClassifier",
+  "accuracy": 0.7222,
+  "precision": 0.6216,
+  "recall": 0.9583,
+  "f1_score": 0.7541,
+  "f2_score": 0.8647,
+  "roc_auc": 0.8806,
+  "selected_metric": "f2_score",
+  "decision_threshold": 0.35,
   "best_params": {
-    "max_iter": 800,
-    "learning_rate_init": 0.001,
-    "learning_rate": "constant",
+    "max_iter": 1500,
+    "learning_rate_init": 0.0005,
+    "learning_rate": "adaptive",
     "hidden_layer_sizes": [
-      16
+      64,
+      32
     ],
-    "batch_size": 32,
-    "alpha": 0.01,
+    "batch_size": 64,
+    "alpha": 0.0001,
     "activation": "tanh"
   },
-  "created_at": "2026-05-09T08:40:23.305493+00:00",
+  "calibration_method": "sigmoid evaluated, not applied",
+  "calibration_applied": false,
+  "calibration_reason": "Sigmoid calibration was evaluated but not applied because it reduced F2-score beyond the accepted tolerance or did not improve probability calibration.",
+  "cv_strategy": "RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=42)",
+  "created_at": "2026-05-09T09:58:49.882614+00:00",
   "input_features": [
     "age",
     "sex",
@@ -37,8 +42,16 @@
     "number_of_major_vessels",
     "thal"
   ],
-  "model_path": "/models/heart_model_v4_1_mlp_balanced.joblib",
+  "model_path": "/models/heart_model_v4_2_mlp_calibrated.joblib",
   "dataset_source": "OpenML heart-statlog",
+  "dataset_rationale": "OpenML heart-statlog was used because it was the original dataset from the workshop notebook and matches the 13 clinical input features expected by the API.",
   "evaluation_report_path": "models/evaluation_report.json",
-  "confusion_matrix_image": "docs/images/confusion_matrix_mlp_v4_1.png"
+  "technical_images": {
+    "confusion_matrix": "docs/images/confusion_matrix_mlp_v4_2.png",
+    "roc_curve": "docs/images/roc_curve_mlp_v4_2.png",
+    "precision_recall_curve": "docs/images/precision_recall_curve_mlp_v4_2.png",
+    "feature_importance": "docs/images/feature_importance_mlp_v4_2.png",
+    "threshold_metrics": "docs/images/threshold_metrics_mlp_v4_2.png",
+    "model_comparison": "docs/images/model_comparison_metrics.png"
+  }
 }

@@ -128,13 +128,13 @@ class PredictionResponse(BaseModel):
                 "label": "Disease",
                 "probability": 0.82,
                 "risk_level": "High",
-                "model_version": "v4.1.0",
+                "model_version": "v4.2.0",
                 "inference_time_ms": 4.7,
                 "probabilities": {
                     "no_disease": 0.18,
                     "disease": 0.82,
                 },
-                "decision_threshold": 0.55,
+                "decision_threshold": 0.35,
             }
         }
     }
@@ -187,6 +187,18 @@ class ModelInfoResponse(BaseModel):
     roc_auc: Optional[float] = Field(None, description="ROC-AUC registrado cuando el modelo permite estimarlo.")
     selected_metric: Optional[str] = Field(None, description="Métrica principal usada para seleccionar el modelo activo.")
     decision_threshold: Optional[float] = Field(None, description="Umbral de decisión usado por el modelo activo.")
+    calibration_method: Optional[str] = Field(
+        None,
+        description="Método de calibración evaluado o aplicado para las probabilidades del modelo.",
+    )
+    calibration_applied: Optional[bool] = Field(
+        None,
+        description="Indica si la calibración de probabilidades quedó aplicada en el artefacto activo.",
+    )
+    calibration_reason: Optional[str] = Field(
+        None,
+        description="Justificación resumida de la decisión sobre calibración.",
+    )
     created_at: Optional[str] = Field(None, description="Fecha de creación del artefacto, si está disponible.")
     input_features: List[str] = Field(..., description="Variables de entrada esperadas por el modelo.")
     model_path: str = Field(..., description="Ruta del artefacto joblib cargado.")
