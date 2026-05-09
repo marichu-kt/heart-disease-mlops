@@ -190,8 +190,6 @@ heart-disease-mlops/
 │   ├── train_model.py
 │   ├── requirements.txt
 │   └── Dockerfile
-├── data/
-│   └── README.md
 ├── frontend/
 │   ├── public/assets/
 │   │   ├── logo-icon.png
