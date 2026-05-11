@@ -1,78 +1,137 @@
-# Guía De Demo Profesional
+# Guía Rápida de Uso
 
-Esta guía describe una demo completa para enseñar el proyecto como una aplicación MLOps con frontend, API, métricas y dashboard.
+Esta guía explica de forma sencilla cómo ejecutar y probar el proyecto **Heart Disease MLOps**.
 
-## 1. Levantar Servicios
+---
+
+## 1. Ejecutar el proyecto
+
+Desde la carpeta principal del repositorio, ejecuta:
 
 ```bash
 docker compose up --build
 ```
 
-Servicios esperados:
+Cuando termine, estarán disponibles:
 
 | Servicio | URL |
 |---|---|
 | Frontend | http://localhost:3000 |
-| Swagger | http://localhost:8000/docs |
-| Metrics | http://localhost:8000/metrics |
+| API / Swagger | http://localhost:8000/docs |
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3001/login |
 
-## 2. Enseñar El Frontend
+---
 
-1. Abre http://localhost:3000.
-2. Revisa la fila de estado: API, modelo, última inferencia y resultado.
-3. Muestra el formulario agrupado por secciones clínicas.
-4. Ejecuta `Evaluar riesgo`.
-5. Explica el resultado, el nivel de riesgo, las probabilidades y el tiempo de inferencia.
-6. Cambia entre modo claro y oscuro para mostrar accesibilidad visual.
+## 2. Probar la aplicación
 
-## 3. Probar Swagger
+Abre el frontend:
 
-1. Abre http://localhost:8000/docs.
-2. Revisa los tags `System`, `Model`, `Prediction` y `Monitoring`.
-3. Ejecuta `GET /health`.
-4. Ejecuta `GET /info`.
-5. Ejecuta `POST /predict` con el ejemplo del schema.
+```text
+http://localhost:3000
+```
 
-## 4. Generar Métricas
+Desde ahí se pueden introducir los datos de un paciente y pulsar **Evaluar riesgo** para obtener:
+
+- predicción del modelo;
+- nivel de riesgo;
+- probabilidad estimada;
+- tiempo de inferencia;
+- versión del modelo usado.
+
+---
+
+## 3. Probar la API
+
+La API se puede probar desde Swagger:
+
+```text
+http://localhost:8000/docs
+```
+
+Endpoints principales:
+
+| Endpoint | Uso |
+|---|---|
+| `GET /health` | Comprueba si la API funciona. |
+| `GET /info` | Muestra información del modelo. |
+| `POST /predict` | Realiza una predicción. |
+| `POST /predict/batch` | Realiza varias predicciones. |
+| `GET /metrics` | Muestra métricas para Prometheus. |
+
+---
+
+## 4. Generar métricas
+
+Para generar tráfico de prueba:
 
 ```bash
-python scripts/demo_requests.py --requests 500 --sleep 0.01
+python scripts/demo_requests.py --requests 100 --sleep 0.01
 ```
 
-Para una demo breve pueden usarse 25 peticiones, pero para capturas finales de Prometheus y Grafana se recomienda generar 500 peticiones. En la validación final de esta entrega se usaron 500 peticiones con 0 errores.
+Esto crea peticiones automáticas a la API para que Prometheus y Grafana tengan datos que mostrar.
 
-El script muestra:
+---
 
-- peticiones realizadas;
-- predicciones `Disease` y `No Disease`;
-- errores si aparecen;
-- tiempo medio aproximado.
+## 5. Ver métricas en Prometheus
 
-## 5. Enseñar Prometheus
+Abre:
 
-1. Abre http://localhost:9090/targets.
-2. Confirma que `heart-api` está `UP`.
-3. Abre http://localhost:9090/graph.
-4. Ejecuta:
+```text
+http://localhost:9090
+```
+
+Consulta útil:
 
 ```promql
-heart_api_up
 heart_predictions_total
-sum by (label) (heart_predictions_by_class_total)
 ```
 
-## 6. Enseñar Grafana
+También puedes revisar si la API está activa en:
 
-1. Abre http://localhost:3001/login.
-2. Entra con las credenciales de demo local.
-3. Abre `Heart Disease MLOps Observability`.
-4. Revisa las filas `Overview`, `Predictions`, `Latency`, `Errors` y `Model`.
-5. Confirma que aparecen datos en `Total predictions`, `Predictions by class`, latencia y errores.
+```text
+http://localhost:9090/targets
+```
 
-## 7. Cierre De La Demo
+El target `heart-api` debería aparecer como `UP`.
 
-Mensaje recomendado:
+---
 
-> El proyecto no solo sirve un modelo, sino que lo empaqueta como una aplicación MLOps observable: frontend, API documentada, modelo versionado, métricas Prometheus, dashboard Grafana, Docker Compose, tests y CI.
+## 6. Ver dashboard en Grafana
+
+Abre:
+
+```text
+http://localhost:3001/login
+```
+
+Credenciales locales:
+
+```text
+usuario: admin
+password: change-me-local-demo
+```
+
+Dashboard:
+
+```text
+Heart Disease MLOps Observability
+```
+
+Ahí se pueden ver predicciones, errores, latencia y estado del modelo.
+
+---
+
+## 7. Resumen
+
+El proyecto incluye:
+
+- frontend React;
+- API FastAPI;
+- modelo neuronal MLP;
+- Docker Compose;
+- métricas Prometheus;
+- dashboard Grafana;
+- tests y CI.
+
+> Proyecto académico. No debe usarse como diagnóstico médico real.
