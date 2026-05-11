@@ -1,83 +1,96 @@
-# Guía De Grafana
+# Guía Rápida de Grafana
 
-Grafana se usa para visualizar las métricas que Prometheus scrapea desde `GET /metrics` de FastAPI.
+Esta guía explica cómo ver en Grafana las métricas del proyecto **Heart Disease MLOps**.
 
-## Acceso
+---
 
-URL local:
+## 1. Abrir Grafana
+
+Con los contenedores levantados, entra en:
 
 ```text
 http://localhost:3001/login
 ```
 
-Credenciales de demo local:
+Credenciales locales:
 
 ```text
 usuario: admin
 password: change-me-local-demo
 ```
 
-Estas credenciales son solo para entorno local. En un despliegue real deben cambiarse con `GRAFANA_ADMIN_USER` y `GRAFANA_ADMIN_PASSWORD` en un `.env` privado no versionado.
+Estas credenciales son solo para uso local.
 
-## Provisionamiento
+---
 
-El proyecto provisiona automáticamente:
+## 2. Levantar el proyecto
 
-| Recurso | Archivo |
-|---|---|
-| Datasource Prometheus | `monitoring/grafana/provisioning/datasources/prometheus.yml` |
-| Dashboard | `monitoring/grafana-dashboard.json` |
-| Provider de dashboards | `monitoring/grafana/provisioning/dashboards/dashboards.yml` |
-
-El datasource apunta a:
-
-```text
-http://prometheus:9090
-```
-
-Ese hostname funciona dentro de la red de Docker Compose.
-
-## Dashboard
-
-Nombre del dashboard:
-
-```text
-Heart Disease MLOps Observability
-```
-
-El dashboard está organizado por filas:
-
-| Fila | Paneles | Propósito |
-|---|---|---|
-| Overview | API status, Total predictions, Request rate, Errors | Entender el estado general de un vistazo. |
-| Predictions | Predictions by class, Predictions by risk level | Ver distribución de predicciones reales. |
-| Latency | Prediction latency p95, HTTP latency average | Evaluar rendimiento de inferencia y API. |
-| Errors | API errors by endpoint, Prediction errors by endpoint | Detectar fallos operativos. |
-| Model | Model info | Confirmar modelo, versión y algoritmo activos. |
-
-## Cómo Ver Datos
-
-1. Levanta la pila:
+Desde la carpeta principal del repositorio:
 
 ```bash
 docker compose up --build
 ```
 
-2. Genera tráfico:
+---
+
+## 3. Generar datos para el dashboard
+
+Grafana necesita que la API reciba predicciones para mostrar métricas.
+
+Puedes generar datos con:
 
 ```bash
-python scripts/demo_requests.py --requests 500 --sleep 0.01
+python scripts/demo_requests.py --requests 100 --sleep 0.01
 ```
 
-3. Entra en Grafana.
-4. Abre la carpeta `MLOps`.
-5. Abre `Heart Disease MLOps Observability`.
-6. Comprueba que el rango temporal está en `Last 1 hour` y el refresh en `10s`.
+También puedes generar datos usando el frontend en:
 
-## Si Aparece Sin Datos
+```text
+http://localhost:3000
+```
 
-- Comprueba que Prometheus ve el target `heart-api` en http://localhost:9090/targets.
-- Ejecuta de nuevo `python scripts/demo_requests.py --requests 500 --sleep 0.01`.
-- Revisa que el dashboard usa el datasource `Prometheus` con uid `prometheus`.
-- Comprueba `docker compose logs api prometheus grafana`.
-- Recuerda que algunas series solo se mueven tras generar predicciones reales.
+---
+
+## 4. Abrir el dashboard
+
+Dentro de Grafana, busca el dashboard:
+
+```text
+Heart Disease MLOps Observability
+```
+
+Ahí se pueden ver:
+
+- estado de la API;
+- número total de predicciones;
+- predicciones por clase;
+- niveles de riesgo;
+- latencia;
+- errores;
+- información del modelo activo.
+
+---
+
+## 5. Si no aparecen datos
+
+Comprueba lo siguiente:
+
+1. Que la API esté funcionando:
+
+```text
+http://localhost:8000/health
+```
+
+2. Que Prometheus vea la API como `UP`:
+
+```text
+http://localhost:9090/targets
+```
+
+3. Que se hayan generado predicciones:
+
+```bash
+python scripts/demo_requests.py --requests 100 --sleep 0.01
+```
+
+4. Que el rango temporal de Grafana esté en `Last 1 hour`.
