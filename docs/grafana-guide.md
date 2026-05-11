@@ -1,4 +1,4 @@
-# Guía Rápida de Grafana
+# Guía de Grafana
 
 Esta guía explica cómo ver en Grafana las métricas del proyecto **Heart Disease MLOps**.
 
