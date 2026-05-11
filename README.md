@@ -1,5 +1,3 @@
-<!-- Header SVG -->
-[![header](https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&textBg=false&reversal=false&fontColor=00FF00)](https://github.com/kyechan99/capsule-render)
 
 <p align="center">
   <img src="docs/images/logo-full.png" alt="Heart Disease MLOps" width="520">
@@ -927,6 +925,3 @@ Antes de hacer público el repositorio, revisa:
 ## 24. Conclusión
 
 Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4.2 versionado, F2-score como criterio principal, threshold documentado, evaluación visual, interfaz profesional, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller, el baseline v3 y las redes neuronales v4.0 y v4.1, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.
-
-<!-- Footer SVG -->
-[![footer](https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&textBg=false&reversal=false&fontColor=00FF00&section=footer)](https://github.com/kyechan99/capsule-render)
