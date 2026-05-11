@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="docs/images/logo-full.png" alt="Heart Disease MLOps" width="520">
 </p>
@@ -13,27 +12,25 @@
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?logo=grafana&logoColor=white)
 ![CI](https://github.com/marichu-kt/heart-disease-mlops/actions/workflows/ci.yml/badge.svg)
 
-Aplicación MLOps completa para predecir riesgo de enfermedad cardíaca a partir de variables clínicas. El proyecto parte del taller base `Taller_PipelineModeling.zip` y lo transforma en una solución final con API, frontend, modelo versionado, monitorización, contenedores y documentación de presentación.
+Aplicación para estimar el riesgo de enfermedad cardíaca a partir de datos clínicos. Incluye una API, una interfaz web, un modelo de red neuronal ya entrenado, métricas para revisar su funcionamiento, ejecución con Docker y documentación para entender y probar el proyecto.
 
-> Uso académico. Este sistema no sustituye una valoración médica real.
+## Resumen
 
-## Resumen Ejecutivo
+Heart Disease MLOps reúne una interfaz web, una API y un modelo de red neuronal para estimar el riesgo de enfermedad cardíaca. También incluye métricas, paneles de monitorización, ejecución con Docker y pruebas automáticas. El modelo activo es la versión `v4.2.0`, basado en `StandardScaler + Robust Calibrated MLPClassifier`.
 
-Heart Disease MLOps integra un dashboard React, una API FastAPI, un modelo neuronal MLP versionado, métricas Prometheus, dashboard Grafana, Docker Compose, tests y CI. La versión activa del modelo es `v4.2.0 — StandardScaler + Robust Calibrated MLPClassifier`.
-
-## Modo claro
+### Modo claro
 
 ![Dashboard principal](docs/images/frontend-light.png)
 
-## Modo oscuro
+### Modo oscuro
 
 ![Dashboard principal](docs/images/frontend-dark.png)
 
-La captura anterior muestra el panel principal de inferencia: estado de API, modelo `v4.2.0`, formulario clínico agrupado, resultado, probabilidades, riesgo, tiempo de inferencia y accesos técnicos.
+La interfaz permite introducir los datos clínicos del paciente y obtener una predicción del modelo. También muestra el estado de la API, la versión del modelo, el resultado, el nivel de riesgo, las probabilidades y el tiempo de respuesta.
 
 ## 1. Qué Hace El Proyecto
 
-El proyecto expone un modelo de Machine Learning mediante una API FastAPI, permite hacer predicciones desde un frontend React moderno y publica métricas operativas para Prometheus y Grafana.
+Este proyecto permite estimar el riesgo de enfermedad cardíaca a partir de datos clínicos. Para ello usa un modelo de Machine Learning conectado a una API y a una interfaz web. Además, incluye métricas para revisar el funcionamiento de la aplicación en Prometheus y Grafana.
 
 Servicios principales:
 
@@ -70,40 +67,28 @@ Guía completa: [`docs/demo-guide.md`](docs/demo-guide.md).
 
 ## 2. Objetivo
 
-Convertir el taller inicial de despliegue de un modelo de enfermedad cardíaca en un proyecto final profesional de MLOps:
+El objetivo del proyecto es crear una aplicación completa y fácil de probar para estimar el riesgo de enfermedad cardíaca.
 
-- API documentada y lista para integración.
-- Modelo final v4.2 basado en red neuronal `MLPClassifier`, evaluación robusta con validación cruzada repetida, búsqueda de hiperparámetros, F2-score y threshold ajustado.
-- Versionado de modelos en `models/`.
-- Frontend visual, responsive y útil para una demo.
-- Métricas compatibles con Prometheus.
-- Dashboard de Grafana provisionado.
-- Ejecución reproducible con Docker Compose.
-- Tests básicos con `pytest`.
-- Validación automática con GitHub Actions.
+Para ello se incluye:
 
-## 3. Problema Que Resuelve
+- una API documentada con FastAPI;
+- un modelo de red neuronal `MLPClassifier` ya entrenado y versionado;
+- una interfaz web para introducir datos y ver resultados;
+- métricas para Prometheus;
+- un dashboard en Grafana;
+- ejecución con Docker Compose;
+- tests básicos con `pytest`;
+- validación automática con GitHub Actions.
 
-El taller original permitía servir un modelo desde FastAPI, pero faltaban piezas habituales en un flujo MLOps completo: interfaz de usuario, versionado explícito, monitorización, despliegue multi-servicio y documentación de arquitectura.
+## 3. Problema que resuelve
 
-Este proyecto permite introducir datos clínicos de un paciente, consultar la API, obtener una predicción interpretable y observar el comportamiento del sistema con métricas.
+El proyecto permite usar un modelo de predicción de enfermedad cardíaca de forma más completa y sencilla.
 
-## 4. Análisis Del ZIP Base
+No se limita solo a ejecutar el modelo desde una API. También añade una interfaz web para introducir los datos del paciente, una forma clara de ver el resultado, métricas para revisar el funcionamiento del sistema y documentación para entender cómo está organizado.
 
-El ZIP `Taller_PipelineModeling.zip` contiene:
+En resumen, permite probar el modelo, ver la predicción y comprobar cómo se comporta la aplicación durante su uso.
 
-| Archivo base | Uso en este proyecto |
-|---|---|
-| `api_heart.py` | Se tomó como referencia para los endpoints y métricas. |
-| `heart_model_wrapper.py` | Se reutilizó la idea de encapsular inferencia y postprocesado. |
-| `heart_disease_model.joblib` | Se conserva como modelo antiguo en `models/heart_model_v1_logistic.joblib`. |
-| `Ejercicio_Practico_Despliegue_ML.ipynb` | Se resume en `docs/taller-base.md` para no arrastrar el notebook completo. |
-| `requirements.txt` | Se actualizó para el backend moderno. |
-| `Dockerfile` | Se sustituyó por un Dockerfile de backend dentro de `backend/`. |
-
-No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-statlog` desde OpenML y, si fallaba, creaba un dataset sintético. En esta versión no se genera dataset sintético para evitar entrenar con datos inventados.
-
-## 5. Tecnologías Usadas
+## 4. Tecnologías Usadas
 
 | Área | Tecnología |
 |---|---|
@@ -116,14 +101,14 @@ No se encontró un CSV de dataset en el ZIP. El notebook base descargaba `heart-
 | Tests | pytest, FastAPI TestClient |
 | CI/CD | GitHub Actions |
 
-## Validación Automática Con GitHub Actions
+## Validación automática con GitHub Actions
 
-El repositorio incluye `.github/workflows/ci.yml`. El workflow se ejecuta en cada Pull Request y en cada push a `main`.
+El proyecto incluye una configuración de GitHub Actions para comprobar que todo sigue funcionando después de cada cambio.
 
-Validaciones incluidas:
+Cada vez que se suben cambios a `main` o se abre un Pull Request, se ejecutan estas validaciones:
 
-- Backend: instala Python, instala `backend/requirements.txt` y ejecuta `pytest`.
-- Frontend: instala Node, ejecuta `npm ci` y `npm run build`.
+- en el backend, se instalan las dependencias y se lanzan los tests con `pytest`;
+- en el frontend, se instalan las dependencias y se comprueba que la aplicación puede compilar correctamente.
 
 ## Calidad Técnica
 
@@ -140,7 +125,7 @@ El proyecto incluye varias piezas pensadas para que la entrega sea evaluable y m
 | Evaluación | `models/evaluation_report.json` registra búsqueda de hiperparámetros, validación cruzada repetida, calibración evaluada, threshold, métricas finales, curvas, matriz de confusión y comparación entre v3, v4.0, v4.1 y v4.2. |
 | Logging | La API registra carga de modelo, versión, peticiones, inferencias y errores de forma clara. |
 
-## 6. Arquitectura General
+## 5. Arquitectura General
 
 ```mermaid
 flowchart LR
@@ -152,9 +137,11 @@ flowchart LR
     Prometheus --> Grafana["Grafana<br/>localhost:3001"]
 ```
 
-El flujo principal es: usuario -> frontend React -> API FastAPI -> modelo MLP versionado. En paralelo, FastAPI expone `/metrics`, Prometheus scrapea esas métricas y Grafana las visualiza en un dashboard operativo.
+El flujo principal es sencillo, el usuario introduce los datos en la interfaz web, el frontend los envía a la API y la API consulta el modelo para devolver la predicción.
 
-## 7. Flujo De Predicción
+Además, la API publica métricas en `/metrics`. Prometheus recoge esas métricas y Grafana las muestra en un dashboard para poder revisar el estado, los errores, las predicciones y los tiempos de respuesta.
+
+## 6. Flujo De Predicción
 
 ```mermaid
 flowchart TD
@@ -168,7 +155,7 @@ flowchart TD
     H --> I["Frontend muestra riesgo, probabilidad y versión"]
 ```
 
-## 8. Flujo De Monitorización
+## 7. Flujo De Monitorización
 
 ```mermaid
 flowchart LR
@@ -178,7 +165,7 @@ flowchart LR
     G --> D["Dashboard MLOps<br/>predicciones, errores, latencia, estado"]
 ```
 
-## 9. Estructura De Carpetas
+## 8. Estructura De Carpetas
 
 ```text
 heart-disease-mlops/
@@ -223,8 +210,7 @@ heart-disease-mlops/
 │   ├── demo-guide.md
 │   ├── grafana-guide.md
 │   ├── model-card.md
-│   ├── prometheus-queries.md
-│   └── taller-base.md
+│   └── prometheus-queries.md
 ├── .github/
 │   └── workflows/ci.yml
 ├── Makefile
@@ -234,19 +220,17 @@ heart-disease-mlops/
 └── README.md
 ```
 
-## 10. Dataset
+## 9. Dataset
 
-El ZIP base no incluye un archivo de dataset. Por eso el entrenamiento está preparado en este orden:
+El modelo utiliza el dataset `heart-statlog` de OpenML, un conjunto de datos sobre enfermedad cardíaca.
 
-1. Si existe `data/heart.csv`, se usa ese CSV local.
-2. Si se pasa `--data-path`, se usa el CSV indicado.
-3. Si no hay CSV local, se descarga `heart-statlog` desde OpenML, que es la fuente usada por el notebook del taller.
+El entrenamiento está preparado para usar los datos en este orden:
 
-Se utilizó OpenML `heart-statlog` porque era el dataset original del taller base. El notebook ya lo cargaba mediante `fetch_openml('heart-statlog')`, y las 13 variables clínicas del dataset coincidían con la estructura de entrada esperada por la API. Por eso se mantuvo como dataset principal para conservar compatibilidad, reproducibilidad y coherencia con el ejercicio original.
+1. si existe `data/heart.csv`, se usa ese archivo local;
+2. si se indica un archivo con `--data-path`, se usa ese CSV;
+3. si no hay archivo local, se descarga automáticamente `heart-statlog` desde OpenML.
 
-El dataset contiene 270 registros de pacientes. Es suficiente para un proyecto académico y una demostración MLOps completa, pero su tamaño reducido se documenta como una limitación del modelo. En un caso real, la mejora más importante sería sustituirlo por un dataset mayor, trazable y compatible con las mismas 13 variables, por ejemplo colocándolo en `data/heart.csv`.
-
-No se usaron datos sintéticos como dataset principal. La prioridad fue mantener compatibilidad con el taller base y reproducibilidad del flujo de entrenamiento.
+El dataset contiene 270 registros de pacientes y 13 variables clínicas. Para este proyecto académico es suficiente, aunque en un caso real sería necesario usar un dataset más grande, actualizado y validado.
 
 Columnas esperadas:
 
@@ -266,51 +250,59 @@ Columnas esperadas:
 | `number_of_major_vessels` | Número de vasos principales |
 | `thal` | Variable thal |
 
-El script admite alias habituales del dataset UCI/OpenML, como `chest_pain`, `rest_blood_pressure`, `cholesterol`, `max_heart_rate` o `vessels`.
+El script también acepta algunos nombres alternativos de columnas, como `chest_pain`, `cholesterol`, `max_heart_rate` o `vessels`, para facilitar el uso de datasets con nombres ligeramente distintos.
 
-## 11. Modelo De Machine Learning
+## 10. Modelo de Machine Learning
 
-La versión activa es `v4.2.0`, una red neuronal multicapa entrenada con `MLPClassifier`. Esta versión mantiene el requisito académico de entregar una red neuronal, pero añade una evaluación más robusta que v4.1: validación cruzada repetida, búsqueda de hiperparámetros con F2-score, ajuste explícito de threshold y evaluación de calibración de probabilidades.
+La versión activa del modelo es `v4.2.0`.
+
+El modelo usado es una red neuronal multicapa creada con `MLPClassifier` de scikit-learn. Antes de entrenar el modelo, los datos se normalizan con `StandardScaler`.
 
 Pipeline activo:
 
 ```text
-StandardScaler + Robust Calibrated MLPClassifier
+StandardScaler + MLPClassifier
 ```
 
-Archivo generado:
+El modelo final se guarda en:
 
 ```text
 models/heart_model_v4_2_mlp_calibrated.joblib
 ```
 
-Metadata y reporte:
+Además del modelo, se guardan dos archivos importantes:
 
 ```text
 models/model_metadata.json
 models/evaluation_report.json
 ```
 
-Ejemplo resumido de metadata:
+`model_metadata.json` contiene la información principal del modelo, como el nombre, la versión, las métricas y el archivo que debe cargar la API.
 
-```json
-{
-  "model_name": "heart_disease_mlp_calibrated",
-  "version": "v4.2.0",
-  "algorithm": "StandardScaler + Robust Calibrated MLPClassifier",
-  "accuracy": 0.7222,
-  "precision": 0.6216,
-  "recall": 0.9583,
-  "f1_score": 0.7541,
-  "f2_score": 0.8647,
-  "roc_auc": 0.8806,
-  "selected_metric": "f2_score",
-  "decision_threshold": 0.35,
-  "calibration_method": "sigmoid evaluated, not applied",
-  "calibration_applied": false,
-  "input_features": ["age", "sex", "..."],
-  "model_path": "/models/heart_model_v4_2_mlp_calibrated.joblib"
-}
+Resumen de métricas del modelo activo:
+
+| Métrica | Valor |
+|---|---:|
+| Accuracy | 0.7222 |
+| Precision | 0.6216 |
+| Recall | 0.9583 |
+| F1-score | 0.7541 |
+| F2-score | 0.8647 |
+| ROC-AUC | 0.8806 |
+
+La métrica principal elegida es `F2-score`, porque da más importancia al `recall`. En este proyecto interesa detectar la mayoría de posibles casos `Disease`, aunque eso pueda generar más falsos positivos.
+
+El threshold de decisión usado por la API es:
+
+```text
+0.35
+```
+
+Esto significa:
+
+```text
+probabilidad de Disease >= 0.35 -> Disease
+probabilidad de Disease < 0.35  -> No Disease
 ```
 
 ## Reporte De Evaluación
@@ -329,19 +321,21 @@ Ejemplo resumido de metadata:
 | Brier score | 0.1483 |
 | Decision threshold | 0.35 |
 
-La matriz de confusión del modelo neuronal v4.2 se genera como imagen en `docs/images/confusion_matrix_mlp_v4_2.png` y se explica en la sección de imágenes técnicas para evitar repetir capturas en el documento.
+La matriz de confusión también se guarda como imagen en `docs/images/confusion_matrix_mlp_v4_2.png`. Esta imagen ayuda a ver de forma rápida cuántos casos acertó el modelo y cuántos errores tuvo.
 
-## 12. Modelo Neuronal Final V4.2
+## 11. Modelo neuronal final v4.2
 
-`MLPClassifier` implementa una red neuronal multicapa dentro de scikit-learn. En v4.2 se entrena como un pipeline reproducible:
+El modelo final es una red neuronal multicapa creada con `MLPClassifier` de scikit-learn.
 
-- `StandardScaler` normaliza las 13 variables clínicas.
-- `MLPClassifier` usa `solver="adam"`, `early_stopping=True`, `validation_fraction=0.15` y `n_iter_no_change=20`.
-- `RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=42)` hace la validación cruzada más estable que una única partición.
-- `RandomizedSearchCV` prueba hiperparámetros sin hacer una búsqueda exhaustiva demasiado lenta.
-- La métrica principal de búsqueda es `F2-score`.
-- El threshold de decisión no queda fijo en `0.5`; se ajusta evaluando varios umbrales.
-- La calibración sigmoid se evaluó con `CalibratedClassifierCV`. No se aplicó al artefacto final porque reducía F2-score y no mejoraba suficientemente la calibración según Brier score.
+Antes de pasar los datos al modelo, se aplica `StandardScaler` para normalizar las 13 variables clínicas. Esto ayuda a que todas las variables tengan una escala similar durante el entrenamiento.
+
+Para elegir la mejor versión del modelo se probaron varias configuraciones con `RandomizedSearchCV`. También se usó validación cruzada repetida para obtener una evaluación más estable.
+
+La métrica principal usada fue `F2-score`, porque da más importancia al `recall`. En este proyecto interesa reducir los falsos negativos, es decir, evitar que un caso con posible enfermedad sea marcado como `No Disease`.
+
+El modelo no usa siempre el threshold típico de `0.5`. En su lugar, se probaron varios umbrales y se eligió `0.35`, que fue el que mejor funcionó según el objetivo del proyecto.
+
+También se evaluó una calibración de probabilidades con `CalibratedClassifierCV`, pero no se aplicó al modelo final porque no mejoraba el resultado elegido.
 
 La mejor configuración encontrada para v4.2 fue:
 
@@ -359,7 +353,11 @@ La mejor configuración encontrada para v4.2 fue:
 
 ## Validación Cruzada, Calibración Y Threshold
 
-En un contexto clínico académico interesa reducir falsos negativos: es preferible que el sistema marque casos dudosos para revisión antes que dejar pasar casos reales de `Disease`. Pero v4.0 demostró que maximizar solo `recall` puede producir demasiados falsos positivos. Por eso v4.2 usa `F2-score`: da más peso al recall que a precision, pero no ignora completamente los falsos positivos.
+En este proyecto interesa reducir los falsos negativos. Es decir, se busca evitar que un caso con posible enfermedad sea clasificado como `No Disease`.
+
+Al mismo tiempo, tampoco conviene marcar demasiados casos sanos como `Disease`. Por eso no se usa solo `recall`, sino `F2-score`, una métrica que da más importancia al `recall`, pero sigue teniendo en cuenta la `precision`.
+
+De esta forma, el modelo intenta detectar la mayoría de casos de riesgo sin ignorar completamente los falsos positivos.
 
 El threshold activo es `0.35`. La API lo lee desde `models/model_metadata.json` y lo usa en inferencia:
 
@@ -368,8 +366,6 @@ probability_disease >= decision_threshold -> Disease
 probability_disease < decision_threshold  -> No Disease
 ```
 
-Aunque un threshold cercano a `0.60` ofrece un comportamiento más equilibrado entre precision y recall, se descartó como umbral final porque reduce la sensibilidad del modelo. En este proyecto se prioriza detectar el mayor número posible de casos `Disease`, por lo que se eligió `0.35`: mantiene un recall más alto y maximiza F2-score, aceptando más falsos positivos como trade-off documentado.
-
 La calibración se documenta de forma explícita:
 
 | Variante | Accuracy | Precision | Recall | F1 | F2 | ROC-AUC | Brier | Decisión |
@@ -377,7 +373,11 @@ La calibración se documenta de forma explícita:
 | Sin calibrar | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.1483 | Activa |
 | Sigmoid calibrada | 0.7963 | 0.7241 | 0.8750 | 0.7925 | 0.8400 | 0.8597 | 0.1540 | Evaluada, no aplicada |
 
-La variante calibrada mejora accuracy, precision y F1, pero reduce recall, F2 y ROC-AUC. Como el proyecto prioriza F2 para mantener sensibilidad en un contexto académico de riesgo, se conserva la red sin calibrar y se deja la decisión documentada. El gráfico de threshold se muestra una sola vez en la sección de imágenes técnicas.
+La versión calibrada mejora algunas métricas, como `accuracy`, `precision` y `F1`.
+
+Sin embargo, baja otras métricas importantes para este proyecto, como `recall`, `F2-score` y `ROC-AUC`.
+
+Como el objetivo principal es detectar el mayor número posible de casos `Disease`, se mantiene como modelo activo la versión sin calibrar. Esta decisión queda documentada en el reporte de evaluación.
 
 ## Métricas del modelo
 
@@ -408,28 +408,39 @@ $$
 
 Lectura sencilla:
 
-- Precision responde: de los que marqué como enfermos, cuántos realmente eran enfermos.
-- Recall responde: de los enfermos reales, cuántos detecté.
-- F2 da más importancia al recall que a precision.
-- En este proyecto académico interesa mantener recall alto, pero documentando los falsos positivos.
+- `Precision`: de todos los casos que el modelo marcó como `Disease`, cuántos realmente eran `Disease`.
+- `Recall`: de todos los casos reales de `Disease`, cuántos consiguió detectar el modelo.
+- `F2-score`: combina `precision` y `recall`, pero da más importancia al `recall`.
+- En este proyecto se prioriza detectar la mayoría de posibles casos `Disease`, aunque eso pueda aumentar los falsos positivos.
 
-## Por Qué No Usamos Solo Accuracy
+## Por qué no usamos solo accuracy
 
-`Accuracy` puede ocultar errores importantes cuando una clase pesa más que otra o cuando el coste de los errores no es simétrico. En riesgo cardíaco, un falso negativo es más delicado que un falso positivo porque implica dejar pasar un caso real de `Disease`. Por eso se eligió v4.2.0 aunque no tenga la mayor accuracy: mantiene el modelo final como red neuronal, mejora recall/F2/ROC-AUC frente a v4.1 y reduce falsos negativos, aceptando más falsos positivos como trade-off documentado.
+No se usa solo `accuracy` porque puede dar una visión incompleta del modelo.
 
-## Imágenes Técnicas Del Modelo
+En este proyecto es importante fijarse también en métricas como `recall` y `F2-score`, ya que interesa detectar la mayoría de posibles casos `Disease`.
 
-Estas imágenes se generan con `python backend/train_model.py` y están incluidas para defender el entrenamiento:
+Un falso negativo significa que el modelo clasifica como `No Disease` un caso que realmente era `Disease`. Por eso se prefiere aceptar algunos falsos positivos antes que dejar pasar demasiados casos de riesgo.
 
-La matriz de confusión resume aciertos y errores del modelo v4.2: `TN=16`, `FP=14`, `FN=1`, `TP=23`. La versión final reduce falsos negativos frente a v4.1, aunque acepta más falsos positivos como trade-off.
+La versión `v4.2.0` no tiene la mejor `accuracy`, pero mantiene el modelo final como red neuronal y consigue un buen equilibrio para el objetivo del proyecto.
+
+## Imágenes técnicas del modelo
+
+El entrenamiento genera varias imágenes para entender mejor el comportamiento del modelo.
+
+La matriz de confusión resume los aciertos y errores de la versión `v4.2.0`:
+
+- `TN = 16`: casos `No Disease` clasificados correctamente;
+- `FP = 14`: casos `No Disease` marcados como `Disease`;
+- `FN = 1`: casos `Disease` clasificados como `No Disease`;
+- `TP = 23`: casos `Disease` clasificados correctamente.
+
+Esta matriz ayuda a ver de forma sencilla qué tipo de errores comete el modelo.
 
 ![Matriz de confusión MLP v4.2](docs/images/confusion_matrix_mlp_v4_2.png)
 
 El gráfico de threshold muestra cómo cambian precision, recall, F1 y F2 al mover el umbral de decisión. El umbral `0.35` se eligió porque maximiza F2-score en el set de test.
 
 ![Métricas por threshold](docs/images/threshold_metrics_mlp_v4_2.png)
-
-En la gráfica se observa que a partir de thresholds más altos, como `0.60`, la precision mejora, pero el recall baja. Como F2-score da más peso al recall, el punto `0.35` resulta más adecuado para el objetivo del proyecto: reducir falsos negativos en una demo académica de riesgo cardíaco.
 
 La curva ROC muestra la capacidad del modelo para separar clases a distintos umbrales. En v4.2 el ROC-AUC es `0.8806`.
 
@@ -442,8 +453,6 @@ La curva Precision-Recall es especialmente útil cuando importa detectar positiv
 La importancia por permutación estima cuánto cae F2-score al alterar una variable. Es una aproximación explicativa del modelo, no una afirmación de causalidad clínica.
 
 ![Importancia por permutación MLP v4.2](docs/images/feature_importance_mlp_v4_2.png)
-
-No se genera `docs/images/cv_metrics_boxplot.png` en esta iteración porque `models/evaluation_report.json` conserva resumen y mejores candidatos de validación cruzada, pero no métricas completas por fold/repetición para Accuracy, Precision, Recall, F1, F2 y ROC-AUC. Se deja como mejora futura para evitar un boxplot artificial.
 
 ## 13. Versionado Del Modelo
 
@@ -469,7 +478,9 @@ La API carga el modelo indicado por `models/model_metadata.json`. Si se añade u
 | v4.1.0 | `StandardScaler + Balanced Tuned MLPClassifier` | 0.7778 | 0.6875 | 0.9167 | 0.7857 | 0.8594 | 0.8569 | 0.55 | Red neuronal más equilibrada, con 10 falsos positivos y 2 falsos negativos. |
 | v4.2.0 | `StandardScaler + Robust Calibrated MLPClassifier` | 0.7222 | 0.6216 | 0.9583 | 0.7541 | 0.8647 | 0.8806 | 0.35 | Modelo neuronal activo; mejora recall, F2 y ROC-AUC frente a v4.1, reduce falsos negativos y acepta más falsos positivos como trade-off. |
 
-La comparación es intencionadamente transparente: v3 sigue siendo un baseline no neuronal fuerte y no se elimina. v4.1 sigue siendo mejor que v4.2 en accuracy, precision y F1. v4.2 se activa porque mantiene la entrega final como red neuronal MLP, usa una evaluación más robusta, mejora recall, F2 y ROC-AUC frente a v4.1 y documenta claramente el trade-off de falsos positivos.
+La comparación se muestra de forma clara para no ocultar los resultados.
+
+La versión `v3` sigue siendo un modelo clásico fuerte, aunque no es una red neuronal. La versión `v4.1` obtiene mejores valores en algunas métricas, como `accuracy`, `precision` y `F1`. Aun así, se usa `v4.2` como modelo final porque mantiene el requisito de usar una red neuronal MLP y mejora métricas importantes para este proyecto, como `recall`, `F2-score` y `ROC-AUC`. También se documenta el punto débil de esta decisión: la versión `v4.2` acepta más falsos positivos.
 
 ![Comparativa visual de modelos](docs/images/model_comparison_metrics.png)
 
@@ -565,47 +576,46 @@ Respuesta esperada:
 
 ## 15. Frontend
 
-El frontend está construido con React + Vite y consume `POST /predict` usando:
+El frontend está hecho con React + Vite. Es la interfaz visual del proyecto y se comunica con la API para enviar los datos del paciente y recibir la predicción.
+
+La URL de la API se configura con:
 
 ```text
 VITE_API_URL=http://localhost:8000
 ```
 
-Incluye:
+La interfaz permite:
 
-- Interfaz tipo dashboard clínico/técnico, sobria y orientada a producto.
-- Cabecera compacta theme-aware con estado de API, modelo activo, accesos técnicos y selector de tema.
-- Fila superior de métricas con estado del servicio, modelo activo, última inferencia y resultado actual.
-- Grid de dashboard con formulario clínico a la izquierda y resultado/visualizaciones a la derecha.
-- Formulario con las 13 variables clínicas agrupadas por secciones.
-- Selects para variables categóricas como sexo, dolor torácico, glucosa, angina, pendiente ST y thal.
-- Validación básica por rango.
-- Panel de resultado con etiqueta, nivel de riesgo, probabilidades, versión del modelo, tiempo de inferencia y fecha local.
-- Visualización de probabilidades `Disease` / `No Disease`.
-- Indicador de riesgo bajo, medio o alto.
-- Resumen visual de los valores de entrada principales.
-- Modo claro/oscuro con preferencia guardada en `localStorage`.
-- Manejo visual de errores.
-- Diseño responsive.
+- introducir las 13 variables clínicas;
+- ver si la API está funcionando;
+- consultar la versión del modelo activo;
+- obtener la predicción `Disease` o `No Disease`;
+- ver el nivel de riesgo, las probabilidades y el tiempo de respuesta;
+- cambiar entre modo claro y modo oscuro;
+- mostrar errores si la API no responde o algún dato no es válido.
 
-## Diseño De Interfaz
+El objetivo del frontend es que el modelo pueda probarse de forma sencilla, sin tener que usar comandos o peticiones manuales.
 
-El frontend se ha rediseñado siguiendo principios de [PatternFly Dashboard](https://www.patternfly.org/patterns/dashboard/design-guidelines/). La pantalla evita la estética de landing page y se plantea como una herramienta interna de evaluación clínica/MLOps:
+---
 
-- cards con un propósito claro: estado del servicio, modelo activo, última inferencia y resultado actual;
-- métricas y resúmenes visibles en la parte superior para entender el sistema de un vistazo;
-- grid de dashboard con formulario clínico a la izquierda y resultado del modelo con más protagonismo a la derecha;
-- formulario agrupado por secciones clínicas y campos categóricos con `select`;
-- masthead theme-aware: claro y limpio en modo claro, oscuro y sobrio en modo oscuro;
-- accesos técnicos discretos en el masthead, sin competir con la tarea principal;
-- visualizaciones basadas únicamente en datos reales del formulario, metadata del modelo y respuesta de la API;
-- modo claro/oscuro sobrio con preferencia guardada en `localStorage`;
-- uso de `prefers-color-scheme: dark` cuando no hay preferencia previa;
-- textos funcionales, sin claims comerciales ni lenguaje alarmista.
+## Diseño de interfaz
 
-## Script De Demo Para Métricas
+La pantalla se organiza como un pequeño dashboard:
 
-El script `scripts/demo_requests.py` genera llamadas reales a `POST /predict` para poblar Prometheus y Grafana antes de una presentación.
+- en la parte superior se muestra el estado general del sistema;
+- a la izquierda está el formulario con los datos clínicos;
+- a la derecha aparece el resultado de la predicción;
+- los accesos técnicos, como Swagger o métricas, están disponibles sin ocupar demasiado espacio.
+
+La idea es que la aplicación sea clara, directa y fácil de usar.
+
+---
+
+## Script de demo para métricas
+
+El script `scripts/demo_requests.py` genera predicciones automáticas contra la API.
+
+Sirve para crear datos antes de abrir Prometheus o Grafana.
 
 Uso básico:
 
@@ -613,34 +623,44 @@ Uso básico:
 python scripts/demo_requests.py
 ```
 
-Uso con parámetros:
+Uso con más peticiones:
 
 ```bash
 python scripts/demo_requests.py --api-url http://localhost:8000 --requests 500 --sleep 0.01
 ```
 
-El resumen por consola incluye:
+El script muestra un resumen con:
 
 - número de peticiones realizadas;
 - predicciones `Disease` y `No Disease`;
-- errores agrupados, si los hay;
+- errores, si los hay;
 - tiempo medio aproximado.
+
+---
 
 ## 16. Prometheus
 
-Prometheus se configura en `monitoring/prometheus.yml` y recoge métricas desde:
+Prometheus recoge las métricas de la API desde:
 
 ```text
 http://api:8000/metrics
 ```
 
-El job se llama `heart-api`, usa `scrape_interval: 10s` y apunta al target Docker `api:8000`.
+La configuración está en:
 
-### Cómo Leer `/metrics`
+```text
+monitoring/prometheus.yml
+```
 
-El endpoint http://localhost:8000/metrics devuelve texto plano en formato Prometheus. No está pensado como dashboard visual para humanos: su función es que Prometheus lo scrapee periódicamente y almacene series temporales.
+El endpoint local de métricas está disponible en:
 
-Para verlo:
+```text
+http://localhost:8000/metrics
+```
+
+Este endpoint no es un dashboard visual. Devuelve texto en formato Prometheus para que Prometheus pueda leerlo y guardar las métricas.
+
+Para verlo desde terminal:
 
 ```bash
 curl -fsS http://localhost:8000/metrics
@@ -657,32 +677,31 @@ Métricas principales:
 | `heart_prediction_errors_total` | Errores durante inferencia. |
 | `heart_prediction_duration_seconds` | Latencia de inferencia. |
 | `heart_predictions_by_class_total` | Predicciones por clase y nivel de riesgo. |
-| `heart_model_info` | Metadata del modelo cargado. |
+| `heart_model_info` | Información del modelo cargado. |
 | `heart_api_up` | Estado de salud de la API. |
 
-### Cómo Ver Métricas En Prometheus
+### Ver métricas en Prometheus
 
-1. Levanta la pila:
+1. Levanta el proyecto:
 
 ```bash
 docker compose up --build
 ```
 
-2. Genera tráfico real:
+2. Genera tráfico:
 
 ```bash
 python scripts/demo_requests.py --requests 500 --sleep 0.01
 ```
 
-Para capturas finales se usaron 500 peticiones con 0 errores, de forma que Prometheus y Grafana muestren series y paneles con datos suficientes.
-
-3. Abre targets:
+3. Abre los targets:
 
 ```text
 http://localhost:9090/targets
 ```
 
-4. Comprueba que `heart-api` está `UP`.
+4. Comprueba que `heart-api` aparece como `UP`.
+
 5. Abre el explorador:
 
 ```text
@@ -694,33 +713,35 @@ Queries útiles:
 | Query | Significado |
 |---|---|
 | `heart_api_up` | Estado de la API: `1` operativa, `0` no disponible. |
-| `rate(api_requests_total[5m])` | Tasa de requests por segundo en los últimos 5 minutos. |
-| `heart_predictions_total` | Total acumulado de predicciones por endpoint. |
-| `sum by (label) (heart_predictions_by_class_total)` | Distribución de predicciones por clase. |
-| `histogram_quantile(0.95, sum(rate(heart_prediction_duration_seconds_bucket[5m])) by (le, endpoint))` | Percentil 95 de latencia de inferencia. |
-| `sum by (endpoint) (rate(api_request_duration_seconds_sum[5m])) / sum by (endpoint) (rate(api_request_duration_seconds_count[5m]))` | Latencia HTTP media por endpoint. |
+| `heart_predictions_total` | Total acumulado de predicciones. |
+| `sum by (label) (heart_predictions_by_class_total)` | Predicciones agrupadas por clase. |
+| `rate(api_requests_total[5m])` | Requests por segundo en los últimos 5 minutos. |
 | `api_request_errors_total` | Errores HTTP 5xx acumulados. |
 
 Guía ampliada: [`docs/prometheus-queries.md`](docs/prometheus-queries.md).
 
+---
+
 ## 17. Grafana
 
-Grafana se levanta en:
+Grafana muestra las métricas de forma visual.
+
+Se abre en:
 
 ```text
 http://localhost:3001/login
 ```
 
-Credenciales por defecto:
+Credenciales locales:
 
 ```text
 usuario: admin
 password: change-me-local-demo
 ```
 
-Estas credenciales son únicamente para demo local. Antes de publicar un despliegue real, define `GRAFANA_ADMIN_USER` y `GRAFANA_ADMIN_PASSWORD` en un `.env` local que no se suba al repositorio.
+Estas credenciales son solo para demo local. En un despliegue real deben cambiarse.
 
-El dashboard se provisiona automáticamente desde:
+El dashboard se carga automáticamente desde:
 
 ```text
 monitoring/grafana-dashboard.json
@@ -732,7 +753,7 @@ Nombre del dashboard:
 Heart Disease MLOps Observability
 ```
 
-Paneles incluidos y organizados por filas:
+Paneles principales:
 
 | Fila | Paneles |
 |---|---|
@@ -746,16 +767,20 @@ Pasos recomendados:
 
 1. Levanta Docker Compose.
 2. Genera tráfico con `python scripts/demo_requests.py --requests 500 --sleep 0.01`.
-3. Entra en Grafana con las credenciales de demo local.
+3. Entra en Grafana.
 4. Abre la carpeta `MLOps`.
 5. Abre `Heart Disease MLOps Observability`.
-6. Comprueba que el rango temporal está en `Last 1 hour` y el refresh en `10s`.
+6. Revisa que el rango temporal esté en `Last 1 hour`.
 
 Guía ampliada: [`docs/grafana-guide.md`](docs/grafana-guide.md).
 
-## 18. Cómo Ejecutar El Proyecto
+---
 
-Requisito: Docker Desktop o Docker Engine con Docker Compose.
+## 18. Cómo ejecutar el proyecto
+
+Requisito: tener Docker Desktop o Docker Engine con Docker Compose.
+
+Desde la raíz del repositorio:
 
 ```bash
 docker compose up --build
@@ -771,28 +796,19 @@ Después abre:
 | Prometheus | http://localhost:9090 |
 | Grafana | http://localhost:3001 |
 
-Para detener:
+Para detener los servicios:
 
 ```bash
 docker compose down
 ```
 
-## Comandos Útiles
+---
 
-El `Makefile` resume los comandos habituales del proyecto:
+## 19. Cómo entrenar el modelo
 
-| Comando | Acción |
-|---|---|
-| `make up` | Levanta la aplicación con `docker compose up --build`. |
-| `make down` | Detiene los servicios con `docker compose down`. |
-| `make test` | Ejecuta `python3 -m pytest`. |
-| `make train` | Reentrena el modelo con `python backend/train_model.py`. |
-| `make frontend-build` | Instala dependencias del frontend y ejecuta `npm run build`. |
-| `make demo` | Ejecuta `python scripts/demo_requests.py`. |
+El modelo ya está entrenado y guardado en `models/`, así que no hace falta entrenarlo para usar la aplicación.
 
-## 19. Cómo Entrenar El Modelo
-
-Con entorno local:
+Si se quiere volver a entrenar:
 
 ```bash
 python -m venv .venv
@@ -801,7 +817,7 @@ pip install -r backend/requirements.txt
 python backend/train_model.py
 ```
 
-Con CSV propio:
+Con un CSV propio:
 
 ```bash
 python backend/train_model.py --data-path data/heart.csv
@@ -821,14 +837,24 @@ docs/images/threshold_metrics_mlp_v4_2.png
 docs/images/model_comparison_metrics.png
 ```
 
-## 20. Cómo Ejecutar Los Tests
+---
+
+## 20. Cómo ejecutar los tests
+
+Para ejecutar los tests:
 
 ```bash
 pip install -r backend/requirements.txt
 pytest
 ```
 
-Los tests básicos están en `tests/test_api.py` y validan:
+Los tests están en:
+
+```text
+tests/test_api.py
+```
+
+Validan los endpoints principales:
 
 - `GET /health`
 - `GET /info`
@@ -836,16 +862,16 @@ Los tests básicos están en `tests/test_api.py` y validan:
 - `POST /predict`
 - `GET /metrics`
 
-GitHub Actions ejecuta estos tests automáticamente en Pull Requests y pushes a `main`.
+GitHub Actions también ejecuta estas comprobaciones automáticamente cuando se suben cambios al repositorio.
 
-## 21. Capturas Del Proyecto
+---
 
-Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: deben generarse con la aplicación real levantada mediante Docker Compose.
+## 21. Capturas del proyecto
+
+Las capturas se guardan en `docs/images/`.
 
 | Captura | Ruta |
 |---|---|
-| Logo icono | `docs/images/logo-icon.png` |
-| Logo completo | `docs/images/logo-full.png` |
 | Frontend dashboard | `docs/images/frontend-dashboard.png` |
 | Frontend modo claro | `docs/images/frontend-light.png` |
 | Frontend modo oscuro | `docs/images/frontend-dark.png` |
@@ -853,9 +879,6 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Prometheus targets | `docs/images/prometheus-targets.png` |
 | Prometheus graph | `docs/images/prometheus-graph.png` |
 | Grafana dashboard | `docs/images/grafana-dashboard.png` |
-| Matriz de confusión v3 | `docs/images/confusion_matrix.png` |
-| Matriz de confusión MLP v4 | `docs/images/confusion_matrix_mlp_v4.png` |
-| Matriz de confusión MLP v4.1 | `docs/images/confusion_matrix_mlp_v4_1.png` |
 | Matriz de confusión MLP v4.2 | `docs/images/confusion_matrix_mlp_v4_2.png` |
 | Curva ROC MLP v4.2 | `docs/images/roc_curve_mlp_v4_2.png` |
 | Curva Precision-Recall MLP v4.2 | `docs/images/precision_recall_curve_mlp_v4_2.png` |
@@ -863,65 +886,71 @@ Las capturas se guardan en `docs/images/`. No se incluyen imágenes falsas: debe
 | Métricas por threshold MLP v4.2 | `docs/images/threshold_metrics_mlp_v4_2.png` |
 | Comparativa de modelos | `docs/images/model_comparison_metrics.png` |
 
-El README usa `frontend-dashboard.png` como captura principal para no repetir la misma pantalla varias veces. Las capturas `frontend-light.png` y `frontend-dark.png` quedan disponibles en `docs/images/` para demostrar el modo claro/oscuro cuando se prepare una presentación.
-
 ### Swagger
 
 ![Swagger](docs/images/swagger.png)
 
-Swagger documenta los endpoints de sistema, modelo, predicción y monitorización, y permite probar `POST /predict` desde el navegador.
+Swagger permite revisar y probar los endpoints de la API desde el navegador.
 
 ### Prometheus Targets
 
 ![Prometheus targets](docs/images/prometheus-targets.png)
 
-La pantalla de targets confirma que Prometheus scrapea correctamente el job `heart-api`.
+Esta pantalla confirma que Prometheus está leyendo correctamente las métricas del servicio `heart-api`.
 
 ### Prometheus Graph
 
 ![Prometheus graph](docs/images/prometheus-graph.png)
 
-La query mostrada resume predicciones por clase usando datos reales generados con `scripts/demo_requests.py`.
+Esta gráfica muestra predicciones agrupadas por clase usando datos generados con `scripts/demo_requests.py`.
 
 ### Grafana
 
 ![Grafana dashboard](docs/images/grafana-dashboard.png)
 
-Grafana muestra la observabilidad operativa de la demo: API UP, total de predicciones, tasa de requests, latencias, errores y distribución por clase/riesgo.
+Grafana muestra el estado de la API, predicciones, latencias, errores e información del modelo.
 
-## 22. Posibles Problemas Y Soluciones
+---
+
+## 22. Problemas comunes
 
 | Problema | Solución |
 |---|---|
-| `Model not loaded` | Verifica que existe `models/model_metadata.json` y que `model_path` apunta a un `.joblib` real. |
-| Error al entrenar por dataset | Añade `data/heart.csv` o revisa la conexión a OpenML. |
+| `Model not loaded` | Revisa que exista `models/model_metadata.json` y que apunte a un `.joblib` real. |
 | Puerto ocupado | Cambia el puerto en `docker-compose.yml` o detén el proceso que lo usa. |
-| El frontend no llama a la API | Revisa `VITE_API_URL` y CORS en `CORS_ORIGINS`. |
-| Prometheus no ve la API | Comprueba que el servicio `api` esté healthy y que `/metrics` responda. |
-| Grafana no muestra datos | Genera tráfico con el frontend o con `curl /predict`. |
+| El frontend no llama a la API | Revisa `VITE_API_URL` y `CORS_ORIGINS`. |
+| Prometheus no ve la API | Comprueba que el servicio `api` esté activo y que `/metrics` responda. |
+| Grafana no muestra datos | Genera tráfico con el frontend o con `scripts/demo_requests.py`. |
 
-## Preparación Antes De Publicar El Repo
+---
+
+## Preparación antes de publicar el repo
 
 Antes de hacer público el repositorio, revisa:
 
 - que no exista un `.env` real versionado;
-- que no haya tokens, claves privadas, certificados ni credenciales reales;
-- que `node_modules/`, `.venv/`, `__pycache__/`, logs y archivos temporales no estén en Git;
-- que `.env.example` solo contenga valores de demo local;
-- que las credenciales de Grafana se configuren por variables de entorno si se despliega fuera de local;
-- que las capturas añadidas en `docs/images/` no muestren datos privados.
+- que no haya tokens, claves privadas ni credenciales reales;
+- que `node_modules/`, `.venv/`, `__pycache__/`, logs y temporales no estén en Git;
+- que las credenciales de Grafana sean solo de demo local;
+- que las capturas no muestren datos privados.
 
-## 23. Mejoras Futuras
+---
 
-- Añadir validación clínica más detallada por variable.
-- Evaluar calibración de probabilidades con más datos y validación externa.
-- Evaluar thresholds en validación cruzada anidada.
-- Ampliar CI/CD con publicación de imágenes Docker y release automática.
-- Persistir métricas y logs con almacenamiento externo.
-- Añadir autenticación para el frontend y la API.
-- Registrar experimentos y comparativas en una herramienta dedicada como MLflow.
-- Añadir alertas en Grafana para estado API, errores y latencia p95.
+## 23. Mejoras futuras
+
+Posibles mejoras:
+
+- usar un dataset más grande y validado;
+- añadir autenticación al frontend y a la API;
+- registrar experimentos con MLflow;
+- publicar imágenes Docker automáticamente;
+- añadir alertas en Grafana;
+- guardar métricas y logs fuera del contenedor.
+
+---
 
 ## 24. Conclusión
 
-Este repositorio convierte el taller inicial en una aplicación MLOps completa: API productiva, modelo neuronal v4.2 versionado, F2-score como criterio principal, threshold documentado, evaluación visual, interfaz profesional, métricas, monitorización y despliegue reproducible con Docker Compose. También conserva el modelo original del taller, el baseline v3 y las redes neuronales v4.0 y v4.1, documentando claramente que el ZIP no incluía dataset CSV y dejando el proyecto preparado para incorporar datos locales en `data/heart.csv`.
+Este repositorio reúne las piezas principales de una aplicación MLOps: API, frontend, modelo neuronal versionado, métricas, monitorización, tests y ejecución con Docker Compose.
+
+El modelo activo es `v4.2.0`. Tiene métricas guardadas, threshold documentado y un reporte de evaluación. El proyecto también queda preparado para usar datos locales en `data/heart.csv` si se quiere entrenar una nueva versión en el futuro.
