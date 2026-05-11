@@ -1,3 +1,16 @@
+"""
+SCRIPT DE DEMO PARA GENERAR TRÁFICO CONTRA LA API FastAPI
+
+Este archivo envía peticiones automáticas al endpoint POST /predict para:
+- probar la API con varios pacientes de ejemplo
+- generar pacientes sintéticos realistas para una demo
+- poblar métricas de Prometheus y Grafana
+- medir tiempos de respuesta y latencia
+- contar predicciones Disease / No Disease
+- contar niveles de riesgo Low / Medium / High
+- guardar un resumen opcional en JSON
+"""
+
 import argparse
 import json
 import os
