@@ -1,3 +1,15 @@
+"""
+TEST DE INTEGRACIÓN PARA LA API FastAPI
+
+Este archivo valida los endpoints principales de la aplicación:
+- estado de salud de la API
+- información y versión del modelo cargado
+- predicción individual
+- predicción por lotes
+- validación de entradas incorrectas
+- exposición de métricas Prometheus
+"""
+
 import pytest
 from fastapi.testclient import TestClient
 
