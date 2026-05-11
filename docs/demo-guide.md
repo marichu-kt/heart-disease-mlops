@@ -119,19 +119,3 @@ Heart Disease MLOps Observability
 ```
 
 Ahí se pueden ver predicciones, errores, latencia y estado del modelo.
-
----
-
-## 7. Resumen
-
-El proyecto incluye:
-
-- frontend React;
-- API FastAPI;
-- modelo neuronal MLP;
-- Docker Compose;
-- métricas Prometheus;
-- dashboard Grafana;
-- tests y CI.
-
-> Proyecto académico. No debe usarse como diagnóstico médico real.
