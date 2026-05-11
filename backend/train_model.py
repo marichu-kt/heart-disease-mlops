@@ -1,3 +1,22 @@
+"""
+SCRIPT DE ENTRENAMIENTO Y EVALUACIÓN DEL MODELO MLP v4.2.0
+
+Este archivo conserva el proceso completo usado para generar el modelo final del proyecto:
+- carga del dataset local o desde OpenML
+- normalización de columnas y variable objetivo
+- entrenamiento de una red neuronal MLPClassifier
+- búsqueda de hiperparámetros con RandomizedSearchCV
+- validación cruzada repetida
+- selección de threshold usando F2-score
+- evaluación de calibración de probabilidades
+- generación de métricas, metadata, reporte JSON e imágenes técnicas
+
+Nota:
+Este script no se ejecuta durante el uso normal de la aplicación.
+La API carga directamente el modelo ya entrenado desde la carpeta models/.
+Se conserva para trazabilidad, reproducibilidad y defensa técnica del proyecto.
+"""
+
 import argparse
 import json
 from datetime import datetime, timezone
